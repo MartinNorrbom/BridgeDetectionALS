@@ -8,7 +8,7 @@ function [fileNames,fileForCoordinates] = getLAZFileFromCoord(cordinateList, dat
     % Get the unique index blocks.
     [uLAZfileNames2,uniqueIndex,allIndex] = unique(LAZfileNames2,'rows','stable');
     
-    % Get coordinates in SWEREF 90 TM format.
+    % Get coordinates in SWEREF 99 TM format.
     Northing = cell2mat(cordinateList{1});
     Easting = cell2mat(cordinateList{2});
     

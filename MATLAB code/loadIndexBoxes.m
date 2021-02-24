@@ -16,6 +16,7 @@ laserDataLocationInfo = 'utfall_laserdata_skog.shp';
 % Read the data.
 fileID = fopen([CoordinatesPath,CoordinatesFileName],'r');
 textDataSelectedPoints = textscan(fileID,'%c');
+fclose(fileID);
 
 dataLocationInfo = shaperead([dataInfoPath,laserDataLocationInfo]);
 
@@ -98,7 +99,7 @@ end
 
 %%
 
-gridSize = 50;
+gridSize = 100;
 tileBlockPointNumber = 2048;
 class = 17;
 
@@ -113,7 +114,7 @@ for ii=1:size(fileForCoordinates,1)
     [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = ...
        getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, flip(coordinates,2));
     for jj=1:size(dataSetSkog,3)
-        pcshow(dataSetSkog(:,:,jj)', returnNumberBlock(1,:,jj))
+        pcshow(dataSetSkog(:,:,jj)', intensityPlot(intensityBlock(1,:,jj),3))
         w = waitforbuttonpress;
     end
 
