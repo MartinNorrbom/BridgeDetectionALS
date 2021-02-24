@@ -6,7 +6,7 @@ function [fileNames,fileForCoordinates] = getLAZFileFromCoord(cordinateList, dat
     [~,LAZfileNames2] = getNameOfIndexBlock(cordinateList);
 
     % Get the unique index blocks.
-    [uLAZfileNames2,uniqueIndex,allIndex] = unique(LAZfileNames2,'rows');
+    [uLAZfileNames2,uniqueIndex,allIndex] = unique(LAZfileNames2,'rows','stable');
     
     % Get coordinates in SWEREF 90 TM format.
     Northing = cell2mat(cordinateList{1});
@@ -20,7 +20,7 @@ function [fileNames,fileForCoordinates] = getLAZFileFromCoord(cordinateList, dat
     for ii=1:length(uniqueIndex)
         fileForCoordinates{ii,1} = LAZfileNames2(ii,2:end);
         fileForCoordinates{ii,2} = ...
-            [str2double(Northing(allIndex==ii,:)),str2double(Easting(allIndex==ii,:))];
+            [str2double(string(Northing(allIndex==ii,:))),str2double(string(Easting(allIndex==ii,:)))];
     end
     
     % Get the number of regions.

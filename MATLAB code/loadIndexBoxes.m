@@ -1,19 +1,20 @@
 clear;
 clc;
 
+CoordinatesPath = '..\selectedCoordinates\';
 CoordinatesFileName = 'Koordinater.txt';
 pathWeb = "download-opendata.lantmateriet.se";
 path1Server = '/Laserdata_Skog';
 %pathData = "/Laserdata_Skog/2019/19B030/"; % Example path
-dataLAZPath = '..\LantmäterietsData\LAZdata\';
-dataInfoPath = '..\LantmäterietsData\utfall_laserdata_skog_shape\';
+dataLAZPath = '..\dataFromLantmateriet\LAZdata\';
+dataInfoPath = '..\dataFromLantmateriet\utfall_laserdata_skog_shape\';
 laserDataPruductionStatus = 'utfall_laserdata_skog.dbf';
 laserDataLocationInfo = 'utfall_laserdata_skog.shp';
 
 
 %%
 % Read the data.
-fileID = fopen(CoordinatesFileName,'r');
+fileID = fopen([CoordinatesPath,CoordinatesFileName],'r');
 textDataSelectedPoints = textscan(fileID,'%c');
 
 dataLocationInfo = shaperead([dataInfoPath,laserDataLocationInfo]);
@@ -44,10 +45,15 @@ dataFolderLAZ = dir(fullfile(dataLAZPath,'*.laz'));
 
 allFileNames = cell2mat({dataFolderLAZ.name});
 
+if(isempty(allFileNames))
+    allFileNames = '';
+end
+
 noCatch = true;
 cFolder = path1Server;
 ftpobj = [];
 
+% Download all the missing files.
 for ii=1:size(filePathsAndNames{1},1)
     
     if( ~isempty( filePathsAndNames{1}{ii} ) )
@@ -90,6 +96,28 @@ if (noCatch == false)
     close(ftpobj);
 end
 
+%%
+
+gridSize = 50;
+tileBlockPointNumber = 2048;
+class = 17;
+
+for ii=1:size(fileForCoordinates,1)
+    coordinates = fileForCoordinates{ii,2};
+    LAZfilename = fileForCoordinates{ii,1};
+    selectedFile = dir(fullfile(dataLAZPath,['*',fileForCoordinates{1,1}]));
+    lasReader = lasFileReader([dataLAZPath,selectedFile.name]);
+    [ptCloud,pointAttributes] = readPointCloud(lasReader,'Attributes',["Classification","LaserReturns"]);
+
+    
+    [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = ...
+       getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, flip(coordinates,2));
+    for jj=1:size(dataSetSkog,3)
+        pcshow(dataSetSkog(:,:,jj)', returnNumberBlock(1,:,jj))
+        w = waitforbuttonpress;
+    end
+
+end
 
 % UserName = input('Write user name','s');
 % Password = input('Write password','s');
