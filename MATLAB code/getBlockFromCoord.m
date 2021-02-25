@@ -1,7 +1,6 @@
 function [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = ...
     getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, coordinates)
-%getBlockFromCoord Summary of this function goes here
-%   Detailed explanation goes here
+%getBlockFromCoord 
 
     numberOfBlock = size(coordinates,1);
 
@@ -81,7 +80,7 @@ function [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = 
     
     % Remove empty index.
     if(ii < numberOfBlock)
-        blockLabel(1,(ii+1):end) = [];
+        blockLabel(:,(ii+1):end) = [];
         dataSetSkog(:,:,(ii+1):end) = [];
         returnNumberBlock(:,:,(ii+1):end) = [];
         intensityBlock(:,:,(ii+1):end) = [];
