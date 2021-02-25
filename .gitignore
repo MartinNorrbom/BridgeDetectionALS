@@ -31,6 +31,10 @@ sccprj/
  
 # Matlab code generation folders
 codegen/
+
+# ALS data from lantmateriet
+dataFromLantmateriet/
+selectedCoordinates/
  
 # Simulink autosave extension
 *.autosave
