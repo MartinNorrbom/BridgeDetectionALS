@@ -6,26 +6,24 @@ function [fileNames,fileForCoordinates] = getLAZFileFromCoord(cordinateList, dat
 %   dataInfo      - Provides info of paths and file names for the index
 %                   boxes available.
 
+    % Get the coordinate in text format.
+    coordinatesTextFormat = [{num2str(cordinateList(:,1))},{num2str(cordinateList(:,2))}];
+
     % Get the names of the index blocks.
-    [~,LAZfileNames2] = getNameOfIndexBlock(cordinateList);
+    [~,LAZfileNames2] = getNameOfIndexBlock(coordinatesTextFormat);
 
     % Get the unique index blocks.
     [uLAZfileNames2,uniqueIndex,allIndex] = unique(LAZfileNames2,'rows','stable');
     
-    % Get coordinates in SWEREF 99 TM format.
-    Northing = cell2mat(cordinateList{1});
-    Easting = cell2mat(cordinateList{2});
-    
-    % Convert text string to numeric value for the unique locations.
-    uNorthing = str2num( Northing(uniqueIndex,:) );
-    uEasting = str2num( Easting(uniqueIndex,:) );
+    % Get unique coordinates for unqiue index boxs.
+    uNorthing = cordinateList(uniqueIndex,1);
+    uEasting = cordinateList(uniqueIndex,2);
     
     % Map each of the coordinates to one index box.
     fileForCoordinates = cell(length(uniqueIndex),2);
     for ii=1:length(uniqueIndex)
-        fileForCoordinates{ii,1} = LAZfileNames2(ii,2:end);
-        fileForCoordinates{ii,2} = ...
-            [str2double(string(Northing(allIndex==ii,:))),str2double(string(Easting(allIndex==ii,:)))];
+        fileForCoordinates{ii,1} = uLAZfileNames2(ii,2:end);
+        fileForCoordinates{ii,2} = cordinateList(allIndex==ii,:);
     end
     
     % Get the number of regions.
@@ -73,8 +71,8 @@ function [nameOfIndexBlocks,LAZfileNames2] = getNameOfIndexBlock(cordinateList)
 
     numberOfCoord = size(cordinateList{1},1);
 
-    Northing = cell2mat(cordinateList{1});
-    Easting = cell2mat(cordinateList{2});
+    Northing = cordinateList{1};
+    Easting = cordinateList{2};
     
     % Get an index block of 10x10 Km.
     Northing10Block = Northing(:,1:3);

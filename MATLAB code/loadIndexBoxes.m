@@ -14,26 +14,10 @@ laserDataLocationInfo = 'utfall_laserdata_skog.shp';
 
 
 %%
-% Read the data for the selected coordinates and production info of the data 
-% provided by lantmäteriet.
-fileID = fopen([CoordinatesPath,CoordinatesFileName],'r');
-textDataSelectedPoints = textscan(fileID,'%c');
-fclose(fileID);
+manualSelectedCoordinates = readCoordinates(CoordinatesPath,CoordinatesFileName,20);
+
+%%
 dataLocationInfo = shaperead([dataInfoPath,laserDataLocationInfo]);
-
-% Get the "SWEREF 99 TM" coordinates
-textData = cell2mat(textDataSelectedPoints)';
-startRef = 'SWEREF99TM:N';
-endRef = '*FörberäkningariExcelmm*';
-
-% Get the "SWEREF 99 TM" coordinates from the text file downloaded from the website:
-% https://karthavet.havochvatten.se/visakoordinater/
-startRefIndex = strfind(textData,startRef)+length(startRef);
-endRefIndex = strfind(textData,endRef)-1;
-importantText = textData(startRefIndex:endRefIndex);
-unstructedCoords = split(importantText,["N","E"]);
-manualSelectedCoordinates = {unstructedCoords(1:2:end),unstructedCoords(2:2:end)};
-
 %%
 % Find the LAZ-files for the selected coordinates.
 [filePathsAndNames,fileForCoordinates] = getLAZFileFromCoord(manualSelectedCoordinates, dataLocationInfo);
@@ -112,7 +96,7 @@ end
 
 % Parameters for tile-blocks
 gridSize = 100;
-tileBlockPointNumber = 2048;
+tileBlockPointNumber = 20000;
 class = 17;
 
 % Generate tile blocks for the location of the selected coordinates.
@@ -132,9 +116,9 @@ for ii=1:size(fileForCoordinates,1)
 
         % Return tile blocks of selected coordinates.
         [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = ...
-           getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, flip(coordinates,2));
+           getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, flip(coordinates,2),"RemovePositive");
 
-       % Plot each tile-block
+        % Plot each tile-block
         for jj=1:size(dataSetSkog,3)
             pcshow(dataSetSkog(:,:,jj)', intensityPlot(intensityBlock(1,:,jj),3))
             w = waitforbuttonpress;

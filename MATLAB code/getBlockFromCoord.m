@@ -1,5 +1,5 @@
 function [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = ...
-    getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, coordinates)
+    getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, coordinates,varargin)
 %getBlockFromCoord generates tile blocks from selected coordinates. It set
 % the current coordinate in the list to the middle of the tile block, then
 % if a coordinate was within a tile block that was generated earlier it
@@ -114,5 +114,21 @@ function [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = 
         pointLabel(:,(ii+1):end) = [];
     end
 
+    if(nargin > 6)
+        
+        if( contains( varargin{1},"RemovePositive" ) )
+            % Removes bridges
+            indexToRemove = blockLabel==1;
+            
+            blockLabel(:,indexToRemove) = [];
+            dataSetSkog(:,:,indexToRemove) = [];
+            returnNumberBlock(:,:,indexToRemove) = [];
+            intensityBlock(:,:,indexToRemove) = [];
+            
+            pointLabel(:,indexToRemove) = [];
+        end
+    
+    end
+    
 end
 
