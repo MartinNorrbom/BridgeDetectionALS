@@ -20,7 +20,7 @@ manualSelectedCoordinates = readCoordinates(CoordinatesPath,CoordinatesFileName,
 dataLocationInfo = shaperead([dataInfoPath,laserDataLocationInfo]);
 %%
 % Find the LAZ-files for the selected coordinates.
-[filePathsAndNames,fileForCoordinates] = getLAZFileFromCoord(manualSelectedCoordinates, dataLocationInfo);
+[filePathsAndNames,fileForCoordinates,neighbourFiles] = getLAZFileFromCoord(manualSelectedCoordinates, dataLocationInfo,"neighbours");
 
 %%
 % Get all the file names for the LAZ files located in the data folder.
@@ -113,10 +113,43 @@ for ii=1:size(fileForCoordinates,1)
         % Upload LAZ-file and get classes and point features.
         lasReader = lasFileReader([dataLAZPath,selectedFile.name]);
         [ptCloud,pointAttributes] = readPointCloud(lasReader,'Attributes',["Classification","LaserReturns"]);
+        
+        % Get neighbours
+        numberOfNeighbours = size(neighbourFiles{ii},1);
+        ptCloudObjects = cell(numberOfNeighbours+1,1);
+        ptAttrObjects = cell(numberOfNeighbours+1,1);
+        
+        cellsWithoutFile = false(numberOfNeighbours+1,1);
+        
+        ptCloudObjects{1} = ptCloud;
+        ptAttrObjects{1} = pointAttributes;
+        
+        for jj=2:numberOfNeighbours+1
+            
+            tempNeighbourFile = dir(fullfile(dataLAZPath,['*',neighbourFiles{ii}(jj-1,:)]));
+            
+            if( ~isempty(tempNeighbourFile) )
+            
+                tempLasReader = lasFileReader([dataLAZPath,tempNeighbourFile.name]);
+                [tempPTCloud,tempPTAttr] = readPointCloud(tempLasReader,'Attributes',["Classification","LaserReturns"]);
 
+                ptCloudObjects{jj} = tempPTCloud;
+                ptAttrObjects{jj} = tempPTAttr;
+            else
+                cellsWithoutFile(jj) = true;
+            end
+        end
+        
+        ptCloudObjects(cellsWithoutFile==1) = [];
+        ptAttrObjects(cellsWithoutFile==1) = [];
+        
         % Return tile blocks of selected coordinates.
-        [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = ...
-           getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, flip(coordinates,2),"RemovePositive");
+%         [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = ...
+%            getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, flip(coordinates,2));
+
+         [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = ...
+            getBlockFromCoord(ptCloudObjects,ptAttrObjects,class,tileBlockPointNumber,gridSize, flip(coordinates,2),"neighbours");
+
 
         % Plot each tile-block
         for jj=1:size(dataSetSkog,3)
@@ -134,5 +167,5 @@ end
 % --- Commands for the ftp-server ---
 % ftpobj = ftp(pathWeb,UserName,Password);
 % cd(ftpobj,pathData);
-% mget(ftpobj,dataName); % '19B030_65825_4150_25.laz'
+% mget(ftpobj,dataName);
 % close(ftpobj);
