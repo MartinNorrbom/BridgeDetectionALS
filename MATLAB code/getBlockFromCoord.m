@@ -1,4 +1,4 @@
-function [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = ...
+function [dataSetSkog,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
     getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, coordinates,varargin)
 %getBlockFromCoord generates tile blocks from selected coordinates. It set
 % the current coordinate in the list to the middle of the tile block, then
@@ -126,8 +126,8 @@ function [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = 
 
             % Get the limits of the tile block, with the selected
             % coordinate in the middle.
-            xLim = coordinates(coordCount,1)+[1,-1]*gridSize; 
-            yLim = coordinates(coordCount,2)+[1,-1]*gridSize; 
+            xLim = coordinates(coordCount,1)+[0.5,-0.5]*gridSize; 
+            yLim = coordinates(coordCount,2)+[0.5,-0.5]*gridSize; 
 
             % Select the coordinates that lie inside the tile block.
             coordInBlockLimit = ...

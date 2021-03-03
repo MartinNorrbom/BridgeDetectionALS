@@ -201,8 +201,8 @@ function [LAZfileNeighbourNames] = getNeighbourFiles(LAZfileNames)
     eastStrIndex = 8:11;
 
     % Convert the coordinates in text format to numbers.
-    Northing = str2double(LAZfileNames(:,northStrIndex));
-    Easting = str2double(LAZfileNames(:,eastStrIndex));
+    Northing = str2double(string(LAZfileNames(:,northStrIndex)));
+    Easting = str2double(string(LAZfileNames(:,eastStrIndex)));
     
     % How the neighbouring file differs in name. See link in function
     % "getNameOfIndexBlock" in this matlab file.
@@ -220,7 +220,7 @@ function [LAZfileNeighbourNames] = getNeighbourFiles(LAZfileNames)
         EastingNeighbours = Easting(ii) + neigbourNameDiffE;
         
         % Allocate the same number of file names as neighbours(LAZ-files).
-        tempText = repmat(LAZfileNames,length(neigbourNameDiffN),1);
+        tempText = repmat(LAZfileNames(ii,:),length(neigbourNameDiffN),1);
         
         % Change the file name to the neighbouring index boxes(LAZ-files).
         tempText(:,northStrIndex) = num2str(NorthingNeighbours);
