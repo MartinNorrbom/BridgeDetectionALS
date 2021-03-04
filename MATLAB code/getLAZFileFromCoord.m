@@ -11,6 +11,8 @@ function [fileNames,fileForCoordinates,varargout] = getLAZFileFromCoord(cordinat
 %   Extra Inputs:
 %       'neighbours': Include neighbouring index boxes for the boxes within
 %           the corddinates of input "cordinateList".
+%       'Methods': A matrix that contains the generation methods each
+%           coordinate will use.
 %   Output:
 %       fileNames: Returns the folder and the file names to "lantmäteriet's"
 %           server where the LAZ files is located.
@@ -18,9 +20,41 @@ function [fileNames,fileForCoordinates,varargout] = getLAZFileFromCoord(cordinat
 %           group the coordinates in input "cordinateList" to the LAZ-file
 %           there are located in.
 %   Extra Output:
-%       varargout{1}: Returns the names of the neighbouring LAZ files to
+%       "neighbour files": Returns the names of the neighbouring LAZ files to
 %           with the same indexing as "fileForCoordinates".
+%       "generation method": Returns the generation methods each
+%           LAZ-file will use.
 
+
+    % Number of required input arguments.
+    nrInputs = 2;
+    % Number of extra inputs.
+    extraInputs = nargin - nrInputs;
+    % Number of extra features.
+    numberOfFeatures = 2;
+    extraFeature = false(numberOfFeatures,1);
+    methodIndex = 0;
+    varargoutCount = 1;
+    
+    if( extraInputs > 0 )
+        ii=1;
+        while(ii <= extraInputs)
+
+            % Check which extra features that will be used and get the
+            % index of the data inputs.
+            if(contains(varargin{ii},"Methods"))
+                extraFeature(1)=true;
+                ii=ii+1;
+                methodIndex = ii;
+                
+            elseif(contains(varargin{ii},"neighbours"))
+                extraFeature(2)=true;
+            else
+                error(['Wrong input argument (',num2str(ii+nrInputs),').']);
+            end
+            ii=ii+1;
+        end
+    end
 
     % Get the coordinate in text format.
     coordinatesTextFormat = [{num2str(cordinateList(:,1))},{num2str(cordinateList(:,2))}];
@@ -31,29 +65,48 @@ function [fileNames,fileForCoordinates,varargout] = getLAZFileFromCoord(cordinat
     % Get the unique index blocks.
     [uLAZfileNames2,uniqueIndex,allIndex] = unique(LAZfileNames2,'rows','stable');
     
-
-    
-    if(nargin >= 3)
-        % If detection neighbouring index boxes is enable.
-        if( contains(varargin{1},"neighbours") )
+    % If tile block generation method is present in the input.
+    if(extraFeature(1))
+        
+        % Get the list of generation methods for each coordinate.
+        methodList = varargin{methodIndex};
+        % Allocate memory to store tile block generation method for each LAZ-file.
+        methodFile = zeros(length(uniqueIndex),size(methodList,2));
+        
+        % Get the coordinates that belongs to the same LAZ-file and merge
+        % the methods that are suposed to happenend at the file.
+        for ii=1:length(uniqueIndex)
+           
+            methodFile(ii,:) = any( methodList( allIndex==ii,: ),1 );
             
-            % Get neighbours of index blocks.
-            LAZfileNeighbourNames = getNeighbourFiles(LAZfileNames2);
-            
-            % Get the unique index box including neighbours.
-            fileNamesIncludingNeibours = unique( [uLAZfileNames2;cell2mat(LAZfileNeighbourNames)],'rows','stable' );
-            uNorthing = str2double(string(fileNamesIncludingNeibours(:,2:6)))*100;
-            uEasting = str2double(string(fileNamesIncludingNeibours(:,8:11)))*100;
-            
-            % A list of the needed index boxes.
-            LAZfilesToGet = fileNamesIncludingNeibours;
-            
-            if(nargout>2)
-                varargout{1} = LAZfileNeighbourNames;
-            end
-        else
-            error("Wrong input argument (3).");
         end
+        
+        % Send output for the for which methods that will be used on each
+        % LAZ-file.
+        varargout{varargoutCount} = methodFile;
+        varargoutCount = varargoutCount+1;
+    end
+    
+    % If neighbouring index blocks should be included.
+    if(extraFeature(2))
+        % If detection neighbouring index boxes is enable.
+
+        % Get neighbours of index blocks.
+        LAZfileNeighbourNames = getNeighbourFiles(LAZfileNames2);
+
+        % Get the unique index box including neighbours.
+        fileNamesIncludingNeibours = unique( [uLAZfileNames2;cell2mat(LAZfileNeighbourNames)],'rows','stable' );
+        uNorthing = str2double(string(fileNamesIncludingNeibours(:,2:6)))*100;
+        uEasting = str2double(string(fileNamesIncludingNeibours(:,8:11)))*100;
+
+        % A list of the needed index boxes.
+        LAZfilesToGet = fileNamesIncludingNeibours;
+
+        if(nargout>2)
+            varargout{varargoutCount} = LAZfileNeighbourNames;
+            varargoutCount = varargoutCount+1;
+        end
+
     else
 
         % Get unique coordinates for unqiue index boxs.
@@ -61,22 +114,29 @@ function [fileNames,fileForCoordinates,varargout] = getLAZFileFromCoord(cordinat
         uEasting = cordinateList(uniqueIndex,2);
         % A list of the needed index boxes, without neighbours.
         LAZfilesToGet = LAZfileNames2;
-        
     end
 
-
     
+    % Extra feature 1 is enable, only the coordinates that will use tile
+    % block generation method 3 will be mapped to the LAZ-files.
+    if(extraFeature(1))
+        
+        indexForTheCoorinateList = allIndex;
+        indexForTheCoorinateList(methodList(:,3) == 0) = 0;
+    else
+
+        indexForTheCoorinateList = allIndex;
+    end
     
     % Map each of the coordinates to one index box.
     fileForCoordinates = cell(length(uniqueIndex),2);
     for ii=1:length(uniqueIndex)
         fileForCoordinates{ii,1} = uLAZfileNames2(ii,2:end);
-        fileForCoordinates{ii,2} = cordinateList(allIndex==ii,:);
+        fileForCoordinates{ii,2} = cordinateList(indexForTheCoorinateList==ii,:);
     end
     
-    
     indexesWithClass3 = find([ dataInfo.KLASS ] == 3);
-    % Get the number of regions.
+    % Get the number of regions that has been quality controlled (Have Klass 3).
     numberOfRegionsClass3 = length(indexesWithClass3);
     
     % Store points that are in the region.
