@@ -121,8 +121,6 @@ function [dataSetSkog,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = 
         % Count cordinate list.
         coordCount = coordCount+1;
         if(coordinateCheckList(coordCount) == false)
-            % Count the number of generated tile blocks.
-            ii = ii+1;
 
             % Get the limits of the tile block, with the selected
             % coordinate in the middle.
@@ -145,39 +143,49 @@ function [dataSetSkog,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = 
             % Get the number of points in the tile block.
             numberOfPointsInBlock = sum(pointsInBlockLimit);
 
-            if(numberOfPointsInBlock< tileBlockPointNumber)      
-                % If the number of points in the tile block are less than tileBlockPointNumber,
-                % interpolate the number to tileBlockPointNumber by copying existing points.
-
-                % Get the number of missing points
-                numberOfDublicates = tileBlockPointNumber - numberOfPointsInBlock;  
-
-                % Increase the number of points to the specified number for each
-                % tile block.
-                dublicates = datasample(find(pointsInBlockLimit),numberOfDublicates);
-
-                % Merge all points with dublicated points. 
-                randomSample = [find(pointsInBlockLimit);dublicates];
-
-                % Random permutation of the points in whole tile block
-                randomSample = randomSample(randperm(length(randomSample)));
-
-            else
-                % Randomly sample tileBlockPointNumber points from the tiles block 
-                randomSample = datasample(find(pointsInBlockLimit),tileBlockPointNumber);
-            end
-
-            % Save the point features for the points in the tile block.
-            dataSetSkog(:,:,ii) = pointCoords(randomSample,:)';
-            returnNumberBlock(:,:,ii) = pointLaserReturn(randomSample,:)';
-            intensityBlock(:,:,ii) = pointIntensity(randomSample,:)';
-
-            % Get point label for bridge point.
-            pointLabel(:,ii) = pointClass(randomSample,:)'==class;
+            if( numberOfPointsInBlock > 0 )
+            % If there are no points in the tile block this step will be scipped. 
+            % Tile blocks with no points can occure when the entire tile 
+            % block is in a water area.
             
-            % Label the whole block.
-            if( sum(pointLabel(:,ii)) <= 0  )
-                blockLabel(1,ii) = 0;
+                % Count the number of generated tile blocks.
+                ii = ii+1;
+            
+                if(numberOfPointsInBlock< tileBlockPointNumber)      
+                    % If the number of points in the tile block are less than tileBlockPointNumber,
+                    % interpolate the number to tileBlockPointNumber by copying existing points.
+
+                    % Get the number of missing points
+                    numberOfDublicates = tileBlockPointNumber - numberOfPointsInBlock;  
+
+                    % Increase the number of points to the specified number for each
+                    % tile block.
+                    dublicates = datasample(find(pointsInBlockLimit),numberOfDublicates);
+
+                    % Merge all points with dublicated points. 
+                    randomSample = [find(pointsInBlockLimit);dublicates];
+
+                    % Random permutation of the points in whole tile block
+                    randomSample = randomSample(randperm(length(randomSample)));
+
+                else
+                    % Randomly sample tileBlockPointNumber points from the tiles block 
+                    randomSample = datasample(find(pointsInBlockLimit),tileBlockPointNumber);
+                end
+
+                % Save the point features for the points in the tile block.
+                dataSetSkog(:,:,ii) = pointCoords(randomSample,:)';
+                returnNumberBlock(:,:,ii) = pointLaserReturn(randomSample,:)';
+                intensityBlock(:,:,ii) = pointIntensity(randomSample,:)';
+
+                % Get point label for bridge point.
+                pointLabel(:,ii) = pointClass(randomSample,:)'==class;
+
+                % Label the whole block.
+                if( sum(pointLabel(:,ii)) <= 0  )
+                    blockLabel(1,ii) = 0;
+                end
+                
             end
 
         end

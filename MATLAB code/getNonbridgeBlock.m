@@ -37,7 +37,12 @@ currentPoints = ptCloud.Location;
 
                 numberOfPointsInBlock = sum(pointsInBlockLimit);
 
-                if(numberOfPointsInBlock< tileBlockPointNumber)      
+                if( numberOfPointsInBlock<=0 )
+                    % If there are no points in this tile block. Which can
+                    % occure when the entire tile block is in a water area.
+                    tileBlockClass( ((length(x)-1)*(ii-1)+jj) ) = true;
+                    
+                elseif(numberOfPointsInBlock< tileBlockPointNumber)      
                     % If the number of points in the tile block are less than tileBlockPointNumber,
                     % interpolate the number to tileBlockPointNumber by copying existing points.
 
