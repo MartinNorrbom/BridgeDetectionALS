@@ -3,7 +3,7 @@ clc;
 
 % All the paths that are need.
 CoordinatesPath = '..\selectedCoordinates\';
-generationFolder = '..\generatedData';
+generationFolder = '..\generatedData\';
 CoordinatesFileName = 'Koordinater.txt';
 serverName = "download-opendata.lantmateriet.se";
 path1Server = '/Laserdata_Skog';
@@ -66,7 +66,7 @@ numberOfBlocks = size(coordBlock,3);
 normalEmpty = single(zeros([1 tileBlockPointNumber numberOfBlocks]));
 pointFeatures = cat(1,intensityBlock,returnNumberBlock,normalEmpty);
 
-dataNum = 1:tileBlockPointNumber;
+
 
 % Create .h5 Data format
 delete('trainingDataSkog.h5');
@@ -76,6 +76,8 @@ h5create('trainingDataSkog.h5','/label',[1 numberOfBlocks],'Chunksize',[1 number
 h5create('trainingDataSkog.h5','/pid',[tileBlockPointNumber numberOfBlocks],'Chunksize',[256 128], 'Deflate',1,'Datatype','int8');
 h5create('trainingDataSkog.h5','/normal',[3 tileBlockPointNumber numberOfBlocks],'Chunksize',[1 128 103], 'Deflate',4,'Datatype','single');
 
+h5create('trainingDataSkog.h5','/data_num',[1 numberOfBlocks],'Chunksize',[1 numberOfBlocks], 'Deflate',1,'Datatype','int32');
+%h5create('trainingDataSkog.h5','/indices_split_to_full',[1 tileBlockPointNumber numberOfBlocks],'Chunksize',[1 128 103], 'Deflate',1,'Datatype','int32');
 
 % Write the tile blocks data to h5 format
 h5write('trainingDataSkog.h5','/data',coordBlock );
@@ -83,7 +85,11 @@ h5write('trainingDataSkog.h5','/label',blockLabel );
 h5write('trainingDataSkog.h5','/pid',pointLabel );
 h5write('trainingDataSkog.h5','/normal',pointFeatures );
 
-%h5write('trainingDataSkog.h5','/data_num',dataNum );
+dataNum = 1:numberOfBlocks;
+h5write('trainingDataSkog.h5','/data_num',dataNum );
+
+splitToFull = zeros(1,tileBlockPointNumber,numberOfBlocks);
+h5write('trainingDataSkog.h5','/indices_split_to_full',splitToFull );
 
 %%
 dataRead = h5read('trainingDataSkog.h5','/data');
@@ -91,5 +97,38 @@ blockLabelRead = h5read('trainingDataSkog.h5','/label');
 pointLabelRead = h5read('trainingDataSkog.h5','/pid');
 pointFeatureRead = h5read('trainingDataSkog.h5','/normal');
 
+indexNonB = find(blockLabelRead == 0);
+indexB = find(blockLabelRead == 1);
 
+randNonB = randperm(length(indexNonB),length(indexB));
+
+indToSave = sort([indexB,indexNonB(randNonB)]);
+
+%%
+numberOfBlocks = length(indToSave);
+
+H5FileName = 'trainingDataSkogPointCNN.h5';
+savedest = [generationFolder,H5FileName];
+
+% Create .h5 Data format
+delete(savedest);
+h5create(savedest,'/data',[3 tileBlockPointNumber numberOfBlocks],'Datatype', 'double')
+h5create(savedest,'/label',[numberOfBlocks], 'Datatype','int32');
+h5create(savedest,'/label_seg',[tileBlockPointNumber numberOfBlocks], 'Datatype','int32');
+%h5create('trainingDataSkogPointCNN.h5','/normal',[3 tileBlockPointNumber numberOfBlocks],'Chunksize',[1 128 103],'Datatype','single');
+
+h5create(savedest,'/data_num',[numberOfBlocks], 'Datatype','int32');
+%h5create('trainingDataSkog.h5','/indices_split_to_full',[1 tileBlockPointNumber numberOfBlocks],'Chunksize',[1 128 103], 'Deflate',1,'Datatype','int32');
+
+% Write the tile blocks data to h5 format
+h5write(savedest,'/data',dataRead(:,:,indToSave) );
+h5write(savedest,'/label',blockLabelRead(1,indToSave) );
+h5write(savedest,'/label_seg',pointLabelRead(:,indToSave) );
+%h5write('trainingDataSkogPointCNN.h5','/normal',pointFeatureRead );
+
+dataNum = int32(1:numberOfBlocks);
+h5write(savedest,'/data_num',dataNum );
+
+% splitToFull = zeros(1,tileBlockPointNumber,numberOfBlocks);
+% h5write('trainingDataSkog.h5','/indices_split_to_full',splitToFull );
 
