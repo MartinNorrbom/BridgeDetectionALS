@@ -1,4 +1,5 @@
-function [dataSetSkogNonbridge,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = getNonbridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize)
+function [dataSetSkogNonbridge,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
+    getNonbridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize)
 %UNTITLED6 Summary of this function goes here
 %   Detailed explanation goes here
 x = ptCloud.XLimits(1):gridSize:ptCloud.XLimits(2);
@@ -36,7 +37,12 @@ currentPoints = ptCloud.Location;
 
                 numberOfPointsInBlock = sum(pointsInBlockLimit);
 
-                if(numberOfPointsInBlock< tileBlockPointNumber)      
+                if( numberOfPointsInBlock<=0 )
+                    % If there are no points in this tile block. Which can
+                    % occure when the entire tile block is in a water area.
+                    tileBlockClass( ((length(x)-1)*(ii-1)+jj) ) = true;
+                    
+                elseif(numberOfPointsInBlock< tileBlockPointNumber)      
                     % If the number of points in the tile block are less than tileBlockPointNumber,
                     % interpolate the number to tileBlockPointNumber by copying existing points.
 
@@ -61,8 +67,8 @@ currentPoints = ptCloud.Location;
                     %dataSetSkogNonbridge(:,:,((length(x)-1)*(ii-1)+jj)) = ptCloud.Location(randomSample,:)';
                 
                     dataSetSkogNonbridge(:,:,((length(x)-1)*(ii-1)+jj)) = ptCloud.Location(randomSample,:)';
-                    returnNumberBlock(:,:,ii) = pointAttributes.LaserReturns(randomSample,:)';
-                    intensityBlock(:,:,ii) = ptCloud.Intensity(randomSample,:)';
+                    returnNumberBlock(:,:,((length(x)-1)*(ii-1)+jj)) = pointAttributes.LaserReturns(randomSample,:)';
+                    intensityBlock(:,:,((length(x)-1)*(ii-1)+jj)) = ptCloud.Intensity(randomSample,:)';
                     
             else
                 tileBlockClass( ((length(x)-1)*(ii-1)+jj) ) = true;

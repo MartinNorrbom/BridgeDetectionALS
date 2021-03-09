@@ -1,4 +1,5 @@
-function [dataSetSkogBridge,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = getBridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize)
+function [dataSetSkogBridge,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
+    getBridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize)
 %  This function is used to get the tile block with bridge points from the
 %  laz file.   
 %   Detailed explanation goes here:
@@ -36,8 +37,8 @@ while ~isempty(currentBridgePoints)
     ii = ii+1;
     currentXYZ = currentBridgePoints(1,:); %start with the first bridge point
     
-    xLim = currentXYZ(1)+[1,-1]*gridSize; %+-50m in x axis from the current point
-    yLim = currentXYZ(2)+[1,-1]*gridSize; %+-50m in y axis from the current point
+    xLim = currentXYZ(1)+[0.5,-0.5]*gridSize; %+-50m in x axis from the current point
+    yLim = currentXYZ(2)+[0.5,-0.5]*gridSize; %+-50m in y axis from the current point
     
     % Select the bridge points that lie inside the tile block
     bridgeInBlockLimit = ...

@@ -8,6 +8,8 @@
 
  
 ##---------------------------------------------------
+Generated Data
+*.h5
 
 # Windows default autosave extension
 *.asv
@@ -35,6 +37,7 @@ codegen/
 # ALS data from lantmateriet
 dataFromLantmateriet/
 selectedCoordinates/
+generatedData/
  
 # Simulink autosave extension
 *.autosave

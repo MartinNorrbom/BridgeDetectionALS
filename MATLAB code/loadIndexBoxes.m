@@ -3,152 +3,98 @@ clc;
 
 % All the paths that are need.
 CoordinatesPath = '..\selectedCoordinates\';
+H5FileName = 'trainingDataSkogPointCNN.h5';
+generationFolder = '..\generatedData\';
 CoordinatesFileName = 'Koordinater.txt';
-pathWeb = "download-opendata.lantmateriet.se";
+serverName = "download-opendata.lantmateriet.se";
 path1Server = '/Laserdata_Skog';
-%pathData = "/Laserdata_Skog/2019/19B030/"; % Example path
+%pathData = "/Laserdata_Skog/2019/19B030/"; % Example path to file in server.
 dataLAZPath = '..\dataFromLantmateriet\LAZdata\';
 dataInfoPath = '..\dataFromLantmateriet\utfall_laserdata_skog_shape\';
 laserDataPruductionStatus = 'utfall_laserdata_skog.dbf';
 laserDataLocationInfo = 'utfall_laserdata_skog.shp';
 
+%%
+% Parameters for tile-blocks
+gridSize = 50;
+tileBlockPointNumber = 1024;
+class = 17;
+sizeIndexBlock = 2500;
 
 %%
-% Read the data for the selected coordinates and production info of the data 
-% provided by lantmäteriet.
-fileID = fopen([CoordinatesPath,CoordinatesFileName],'r');
-textDataSelectedPoints = textscan(fileID,'%c');
-fclose(fileID);
+%manualSelectedCoordinates = readCoordinates(CoordinatesPath,CoordinatesFileName,20);
+
+[manualSelectedCoordinates,tileBlockMethod] = ...
+    getSelectedCoordinates(CoordinatesPath,sizeIndexBlock,gridSize);
+
+%%
 dataLocationInfo = shaperead([dataInfoPath,laserDataLocationInfo]);
-
-% Get the "SWEREF 99 TM" coordinates
-textData = cell2mat(textDataSelectedPoints)';
-startRef = 'SWEREF99TM:N';
-endRef = '*FörberäkningariExcelmm*';
-
-% Get the "SWEREF 99 TM" coordinates from the text file downloaded from the website:
-% https://karthavet.havochvatten.se/visakoordinater/
-startRefIndex = strfind(textData,startRef)+length(startRef);
-endRefIndex = strfind(textData,endRef)-1;
-importantText = textData(startRefIndex:endRefIndex);
-unstructedCoords = split(importantText,["N","E"]);
-manualSelectedCoordinates = {unstructedCoords(1:2:end),unstructedCoords(2:2:end)};
-
 %%
 % Find the LAZ-files for the selected coordinates.
-[filePathsAndNames,fileForCoordinates] = getLAZFileFromCoord(manualSelectedCoordinates, dataLocationInfo);
+[filePathsAndNames,fileForCoordinates,generationMethod,neighbourFiles] = ...
+    getLAZFileFromCoord(manualSelectedCoordinates, dataLocationInfo,"Methods",tileBlockMethod,"neighbours");
 
 %%
-% Get all the file names for the LAZ files located in the data folder.
-dataFolderLAZ = dir(fullfile(dataLAZPath,'*.laz'));
-allFileNames = cell2mat({dataFolderLAZ.name});
-
-if(isempty(allFileNames))
-    allFileNames = '';
-end
-
-noCatch = true;
-cFolder = path1Server;
-ftpobj = [];
-
 % ------------- Download all the missing files ----------------
 
-% Loop through all the regions.
-for ii=1:size(filePathsAndNames{1},1)
-    
-    % Check if there are index boxes located in the current region.
-    if( ~isempty( filePathsAndNames{1}{ii} ) )
-        
-        % If at least one file is missing and the current index box is 
-        % missing, locate the path to the current index box in the server.
-        if (noCatch == false)
-            if ~contains(cFolder,[path1Server,filePathsAndNames{1}{ii}] )
-                cFolder = [path1Server,filePathsAndNames{1}{ii}];
-                cd(ftpobj,cFolder);
-            end
-        end
-        
-        lengthJJ = size(filePathsAndNames{2}{ii},1);
-        for jj=1:lengthJJ
-
-            % Download the LAZ file if it is not downloaded.
-            if( ~contains(allFileNames,filePathsAndNames{2}{ii}(jj,:)) )
-                
-                % Check if an connection to the ftp server is establish.
-                if(noCatch)
-                    noCatch = false;
-                    disp("At least one file is missing. Log in to download the files.")
-                    
-                    % Write user name and password for the ftp-server.
-                    UserName = input('Write user name: \n','s');
-                    Password = input('Write password: \n','s');
-                    
-                    % Connect and login to the ftp server
-                    ftpobj = ftp(pathWeb,UserName,Password);
-                    
-                    % Get to the folder in the ftp server where the missing 
-                    % index box is located.
-                    cFolder = [path1Server,filePathsAndNames{1}{ii}];
-                    cd(ftpobj,cFolder);
-                end
-                
-                % Download missing index box
-                disp(['Download: ',filePathsAndNames{2}{ii}(jj,:)])
-                mget(ftpobj,filePathsAndNames{2}{ii}(jj,:),dataLAZPath);
-                
-            end
-        end
-    end
-end
-
-% Close ftp server connection.
-if (noCatch == false)
-    close(ftpobj);
-end
-
+getMissingFilesFromServer(filePathsAndNames,serverName,path1Server,dataLAZPath);
 %%
 
 % ------ Generate tile-blocks for the selected coordinates ------
 
-% Parameters for tile-blocks
-gridSize = 100;
-tileBlockPointNumber = 2048;
-class = 17;
+% generationMethod = zeros(size(fileForCoordinates,1),3);
+% generationMethod(:,[1,2,3]) = 1;
+% Generate the tile blocks.
+[coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ... 
+    generateTileBlocks(fileForCoordinates,generationMethod,gridSize, ...
+    tileBlockPointNumber,class,"dataPath",dataLAZPath,"neighbours",neighbourFiles);
 
-% Generate tile blocks for the location of the selected coordinates.
-for ii=1:size(fileForCoordinates,1)
-    
-    % Get file name for index box and coordinates within the index block.
-    coordinates = fileForCoordinates{ii,2};
-    LAZfilename = fileForCoordinates{ii,1};
-    selectedFile = dir(fullfile(dataLAZPath,['*',fileForCoordinates{ii,1}]));
-    
-    % Check if the current file is available.
-    if( ~isempty(selectedFile) )
-    
-        % Upload LAZ-file and get classes and point features.
-        lasReader = lasFileReader([dataLAZPath,selectedFile.name]);
-        [ptCloud,pointAttributes] = readPointCloud(lasReader,'Attributes',["Classification","LaserReturns"]);
+%%
+% ---------------- Plot all the generate tile-blocks ----------------
 
-        % Return tile blocks of selected coordinates.
-        [dataSetSkog,returnNumberBlock,intensityBlock,pointLabel,blockLabel] = ...
-           getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, flip(coordinates,2));
+numberOfGeneratedBlocks = size(coordBlock,3);
+% for ii=1:numberOfGeneratedBlocks
+%     pcshow(coordBlock(:,:,ii)', intensityPlot(intensityBlock(1,:,ii),6))
+%     w = waitforbuttonpress;
+% end
 
-       % Plot each tile-block
-        for jj=1:size(dataSetSkog,3)
-            pcshow(dataSetSkog(:,:,jj)', intensityPlot(intensityBlock(1,:,jj),3))
-            w = waitforbuttonpress;
-        end
-    end
-end
-
-
-% --- Make clusters to get the data more detailed ---
+% --- Make clusters to make better visualization of the data. ---
 % GMModel = fitgmdist(dataSetSkog(:,:,jj)',5);
 % idx = cluster(GMModel,dataSetSkog(:,:,jj)');
 
-% --- Commands for the ftp-server ---
-% ftpobj = ftp(pathWeb,UserName,Password);
-% cd(ftpobj,pathData);
-% mget(ftpobj,dataName); % '19B030_65825_4150_25.laz'
-% close(ftpobj);
+%%
+% To save a balanced training set.
+
+indexNonB = find(blockLabel == 0);
+indexB = find(blockLabel == 1);
+
+randNonB = randperm(length(indexNonB),length(indexB));
+
+indToSave = sort([indexB,indexNonB(randNonB)]);
+
+%%
+numberOfBlocks = length(indToSave);
+
+dataNum = int32(1:numberOfBlocks);
+
+% Create .h5 Data format
+saveTileBlocksH5(H5FileName,coordBlock(:,:,indToSave),blockLabel(1,indToSave),pointLabel(:,indToSave), ...
+    "data_num",dataNum,"intensity",intensityBlock(:,:,indToSave), ...
+    "returnNumber",returnNumberBlock(:,:,indToSave),"path",generationFolder);
+
+% % Commands to read data.
+% dataRead = h5read([generationFolder,H5FileName],'/data');
+% blockLabelRead = h5read([generationFolder,H5FileName],'/label');
+% pointLabelRead = h5read([generationFolder,H5FileName],'/pid');
+% pointFeatureRead = h5read([generationFolder,H5FileName],'/normal');
+
+% % Create h5 data format for pointNet
+% delete('trainingDataSkog.h5');
+% h5create('trainingDataSkog.h5','/data',[3 tileBlockPointNumber numberOfBlocks],'Chunksize',[1 128 103], ...
+%     'Deflate',4,'Datatype', 'single')
+% h5create('trainingDataSkog.h5','/label',[1 numberOfBlocks],'Chunksize',[1 numberOfBlocks], 'Deflate',1,'Datatype','int8');
+% h5create('trainingDataSkog.h5','/pid',[tileBlockPointNumber numberOfBlocks],'Chunksize',[256 128], 'Deflate',1,'Datatype','int8');
+% h5create('trainingDataSkog.h5','/normal',[3 tileBlockPointNumber numberOfBlocks],'Chunksize',[1 128 103], 'Deflate',4,'Datatype','single');
+% h5create('trainingDataSkog.h5','/data_num',[1 numberOfBlocks],'Chunksize',[1 numberOfBlocks], 'Deflate',1,'Datatype','int32');
+% h5create('trainingDataSkog.h5','/indices_split_to_full',[1 tileBlockPointNumber numberOfBlocks],'Chunksize',[1 128 103], 'Deflate',1,'Datatype','int32');
+

@@ -1,62 +1,172 @@
-function [fileNames,fileForCoordinates] = getLAZFileFromCoord(cordinateList, dataInfo)
+function [fileNames,fileForCoordinates,varargout] = getLAZFileFromCoord(cordinateList, dataInfo,varargin)
 %fileForCoordinates return which index boxes and LAZ-files that are needed
-%for the "cordinateList".
+% to generate tile blocks coordinates in the input "cordinateList". It also
+% return information of where the files is located in "lantmäteriet's" server.
 
-%   cordinateList - Is to find which index boxes that are needed.
-%   dataInfo      - Provides info of paths and file names for the index
-%                   boxes available.
+%   Input: 
+%       cordinateList: Contains the coordinates for the index boxes that 
+%           should be found.
+%       dataInfo: Provides info of the quality class, paths and file names 
+%           for the index boxes available.
+%   Extra Inputs:
+%       'neighbours': Include neighbouring index boxes for the boxes within
+%           the corddinates of input "cordinateList".
+%       'Methods': A matrix that contains the generation methods each
+%           coordinate will use.
+%   Output:
+%       fileNames: Returns the folder and the file names to "lantmäteriet's"
+%           server where the LAZ files is located.
+%       fileForCoordinates: Returns the last part of the LAZ-file names and
+%           group the coordinates in input "cordinateList" to the LAZ-file
+%           there are located in.
+%   Extra Output:
+%       "neighbour files": Returns the names of the neighbouring LAZ files to
+%           with the same indexing as "fileForCoordinates".
+%       "generation method": Returns the generation methods each
+%           LAZ-file will use.
+
+
+    % Number of required input arguments.
+    nrInputs = 2;
+    % Number of extra inputs.
+    extraInputs = nargin - nrInputs;
+    % Number of extra features.
+    numberOfFeatures = 2;
+    extraFeature = false(numberOfFeatures,1);
+    methodIndex = 0;
+    varargoutCount = 1;
+    
+    if( extraInputs > 0 )
+        ii=1;
+        while(ii <= extraInputs)
+
+            % Check which extra features that will be used and get the
+            % index of the data inputs.
+            if(contains(varargin{ii},"Methods"))
+                extraFeature(1)=true;
+                ii=ii+1;
+                methodIndex = ii;
+                
+            elseif(contains(varargin{ii},"neighbours"))
+                extraFeature(2)=true;
+            else
+                error(['Wrong input argument (',num2str(ii+nrInputs),').']);
+            end
+            ii=ii+1;
+        end
+    end
+
+    % Get the coordinate in text format.
+    coordinatesTextFormat = [{num2str(cordinateList(:,1))},{num2str(cordinateList(:,2))}];
 
     % Get the names of the index blocks.
-    [~,LAZfileNames2] = getNameOfIndexBlock(cordinateList);
+    [~,LAZfileNames2] = getNameOfIndexBlock(coordinatesTextFormat);
 
     % Get the unique index blocks.
     [uLAZfileNames2,uniqueIndex,allIndex] = unique(LAZfileNames2,'rows','stable');
     
-    % Get coordinates in SWEREF 99 TM format.
-    Northing = cell2mat(cordinateList{1});
-    Easting = cell2mat(cordinateList{2});
+    % If tile block generation method is present in the input.
+    if(extraFeature(1))
+        
+        % Get the list of generation methods for each coordinate.
+        methodList = varargin{methodIndex};
+        % Allocate memory to store tile block generation method for each LAZ-file.
+        methodFile = zeros(length(uniqueIndex),size(methodList,2));
+        
+        % Get the coordinates that belongs to the same LAZ-file and merge
+        % the methods that are suposed to happenend at the file.
+        for ii=1:length(uniqueIndex)
+           
+            methodFile(ii,:) = any( methodList( allIndex==ii,: ),1 );
+            
+        end
+        
+        % Send output for the for which methods that will be used on each
+        % LAZ-file.
+        varargout{varargoutCount} = methodFile;
+        varargoutCount = varargoutCount+1;
+    end
     
-    % Convert text string to numeric value for the unique locations.
-    uNorthing = str2num( Northing(uniqueIndex,:) );
-    uEasting = str2num( Easting(uniqueIndex,:) );
+    % If neighbouring index blocks should be included.
+    if(extraFeature(2))
+        % If detection neighbouring index boxes is enable.
+
+        % Get neighbours of index blocks.
+        LAZfileNeighbourNames = getNeighbourFiles(LAZfileNames2);
+
+        % Get the unique index box including neighbours.
+        fileNamesIncludingNeibours = unique( [uLAZfileNames2;cell2mat(LAZfileNeighbourNames)],'rows','stable' );
+        uNorthing = str2double(string(fileNamesIncludingNeibours(:,2:6)))*100;
+        uEasting = str2double(string(fileNamesIncludingNeibours(:,8:11)))*100;
+
+        % A list of the needed index boxes.
+        LAZfilesToGet = fileNamesIncludingNeibours;
+
+        if(nargout>2)
+            varargout{varargoutCount} = LAZfileNeighbourNames;
+            varargoutCount = varargoutCount+1;
+        end
+
+    else
+
+        % Get unique coordinates for unqiue index boxs.
+        uNorthing = cordinateList(uniqueIndex,1);
+        uEasting = cordinateList(uniqueIndex,2);
+        % A list of the needed index boxes, without neighbours.
+        LAZfilesToGet = LAZfileNames2;
+    end
+
+    
+    % Extra feature 1 is enable, only the coordinates that will use tile
+    % block generation method 3 will be mapped to the LAZ-files.
+    if(extraFeature(1))
+        
+        indexForTheCoorinateList = allIndex;
+        indexForTheCoorinateList(methodList(:,3) == 0) = 0;
+    else
+
+        indexForTheCoorinateList = allIndex;
+    end
     
     % Map each of the coordinates to one index box.
     fileForCoordinates = cell(length(uniqueIndex),2);
     for ii=1:length(uniqueIndex)
-        fileForCoordinates{ii,1} = LAZfileNames2(ii,2:end);
-        fileForCoordinates{ii,2} = ...
-            [str2double(string(Northing(allIndex==ii,:))),str2double(string(Easting(allIndex==ii,:)))];
+        fileForCoordinates{ii,1} = uLAZfileNames2(ii,2:end);
+        fileForCoordinates{ii,2} = cordinateList(indexForTheCoorinateList==ii,:);
     end
     
-    % Get the number of regions.
-    numberOfRegions = length(dataInfo);
+    indexesWithClass3 = find([ dataInfo.KLASS ] == 3);
+    % Get the number of regions that has been quality controlled (Have Klass 3).
+    numberOfRegionsClass3 = length(indexesWithClass3);
     
     % Store points that are in the region.
-    regionPath = cell(numberOfRegions,1);
+    regionPath = cell(numberOfRegionsClass3,1);
     % Store file name of the 
-    regionLAZfileNames = cell(numberOfRegions,1);
+    regionLAZfileNames = cell(numberOfRegionsClass3,1);
     
     % Get region and time of sampling for index blocks.
-    for ii=1:numberOfRegions
+    for ii=1:numberOfRegionsClass3
     
+        % Get index of area with class 3.
+        jj = indexesWithClass3(ii);
         % Find which region the cordinates is located in.
         blocksInRegion = ...
-            ( (min(dataInfo(ii).BoundingBox(:,2)) <= uNorthing) &  ...
-            (uNorthing < max(dataInfo(ii).BoundingBox(:,2))) ) & ...
-            ( (min(dataInfo(ii).BoundingBox(:,1)) <= uEasting) &  ...
-            (uEasting < max(dataInfo(ii).BoundingBox(:,1))) );
+            ( (min(dataInfo(jj).BoundingBox(:,2)) <= uNorthing) &  ...
+            (uNorthing < max(dataInfo(jj).BoundingBox(:,2))) ) & ...
+            ( (min(dataInfo(jj).BoundingBox(:,1)) <= uEasting) &  ...
+            (uEasting < max(dataInfo(jj).BoundingBox(:,1))) );
         
         % Check if there was an available region the coordinates was
         % located in.
         if sum(blocksInRegion) > 0
             
             % Create a path to the region.
-            regionInfo = dataInfo(ii).OMR0xC5DE;
+            regionInfo = dataInfo(jj).OMR0xC5DE;
             regionPath{ii} = ['/20',regionInfo(1:2),'/',regionInfo,'/'];
             
             % Indicates which region the index boxes is located in.
             regionLAZfileNames{ii} = ...
-                [repmat(regionInfo,[sum(blocksInRegion),1]),uLAZfileNames2(blocksInRegion,:)];
+                [repmat(regionInfo,[sum(blocksInRegion),1]),LAZfilesToGet(blocksInRegion,:)];
         end
     end
     
@@ -73,8 +183,8 @@ function [nameOfIndexBlocks,LAZfileNames2] = getNameOfIndexBlock(cordinateList)
 
     numberOfCoord = size(cordinateList{1},1);
 
-    Northing = cell2mat(cordinateList{1});
-    Easting = cell2mat(cordinateList{2});
+    Northing = cordinateList{1};
+    Easting = cordinateList{2};
     
     % Get an index block of 10x10 Km.
     Northing10Block = Northing(:,1:3);
@@ -133,3 +243,52 @@ function [nameOfIndexBlocks,LAZfileNames2] = getNameOfIndexBlock(cordinateList)
 
 end
 
+
+function [LAZfileNeighbourNames] = getNeighbourFiles(LAZfileNames)
+%getNeighbourFiles returns the names neighbours to the list index blocks in 
+% "LAZfileNames".
+%
+%   Input: 
+%       LAZfileNames: Is the list of index boxes.
+%   Output:
+%       LAZfileNeighbourNames is an cell array where each cell contains the 
+%       name of neighbouring index blocks for the index block with the same 
+%       index in "LAZfileNames".
+
+    % The columns that contain the northing numbers.
+    northStrIndex = 2:6;
+    % The columns that contain the easting numbers.
+    eastStrIndex = 8:11;
+
+    % Convert the coordinates in text format to numbers.
+    Northing = str2double(string(LAZfileNames(:,northStrIndex)));
+    Easting = str2double(string(LAZfileNames(:,eastStrIndex)));
+    
+    % How the neighbouring file differs in name. See link in function
+    % "getNameOfIndexBlock" in this matlab file.
+    neigbourNameDiffN = [-25,0,25,-25,25,-25,0,25]';
+    neigbourNameDiffE = [-25,-25,-25,0,0,25,25,25]';
+    
+    % Allocate cells to store the neighbours names.
+    LAZfileNeighbourNames = cell(size(LAZfileNames,1),1);
+    
+    % Loop through all index boxes in "LAZfileNames" and find the
+    % neighbours.
+    for ii=1:size(LAZfileNames,1)
+        % Get the coordinates/names of the neighbouring index boxes.
+        NorthingNeighbours = Northing(ii) + neigbourNameDiffN;
+        EastingNeighbours = Easting(ii) + neigbourNameDiffE;
+        
+        % Allocate the same number of file names as neighbours(LAZ-files).
+        tempText = repmat(LAZfileNames(ii,:),length(neigbourNameDiffN),1);
+        
+        % Change the file name to the neighbouring index boxes(LAZ-files).
+        tempText(:,northStrIndex) = num2str(NorthingNeighbours);
+        tempText(:,eastStrIndex) = num2str(EastingNeighbours);
+        
+        % Store the names of the neighbours.
+        LAZfileNeighbourNames{ii} = tempText;
+        
+    end
+    
+end
