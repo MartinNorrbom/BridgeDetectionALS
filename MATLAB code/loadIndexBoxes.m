@@ -53,10 +53,10 @@ getMissingFilesFromServer(filePathsAndNames,serverName,path1Server,dataLAZPath);
 % ---------------- Plot all the generate tile-blocks ----------------
 
 numberOfGeneratedBlocks = size(coordBlock,3);
-% for ii=1:numberOfGeneratedBlocks
-%     pcshow(coordBlock(:,:,ii)', intensityPlot(intensityBlock(1,:,ii),6))
-%     w = waitforbuttonpress;
-% end
+for ii=1:numberOfGeneratedBlocks
+    pcshow(coordBlock(:,:,ii)', intensityPlot(intensityBlock(1,:,ii),6))
+    w = waitforbuttonpress;
+end
 
 % --- Make clusters to make better visualization of the data. ---
 % GMModel = fitgmdist(dataSetSkog(:,:,jj)',5);

@@ -1,4 +1,4 @@
-function [dataSetSkogBridge,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
+function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
     getBridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize)
 %  This function is used to get the tile block with bridge points from the
 %  laz file.   
@@ -19,10 +19,10 @@ bridgePoints = pointAttributes.Classification == class;
 
 xyzBridgePoints = ptCloud.Location(bridgePoints,:);
 
-numberOfBlock = 2*((ptCloud.XLimits(2)-ptCloud.XLimits(1))/gridSize)*((ptCloud.YLimits(2)-ptCloud.YLimits(1))/gridSize);
+numberOfBlock = ceil(2*((ptCloud.XLimits(2)-ptCloud.XLimits(1))/gridSize)*((ptCloud.YLimits(2)-ptCloud.YLimits(1))/gridSize));
 
-% Create a 3x2048x1648 empty matrix
-dataSetSkogBridge = single(zeros([3 tileBlockPointNumber numberOfBlock]));
+% Create a 3 x pointsInOneTileBlock x totalTileBlocks empty matrix
+blockCoord = single(zeros([3 tileBlockPointNumber numberOfBlock]));
 returnNumberBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
 intensityBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
 pointLabel = single(zeros([tileBlockPointNumber numberOfBlock]));
@@ -82,7 +82,9 @@ while ~isempty(currentBridgePoints)
     end
     
     % Store tile blocks from randomly sampled points
-    dataSetSkogBridge(:,:,ii) = ptCloud.Location(randomSample,:)';
+    blockCoord(:,:,ii) = ptCloud.Location(randomSample,:)';
+    
+    blockCoord(:,:,ii) = zeroCenteringTileBlock( blockCoord(:,:,ii),currentXYZ);
     returnNumberBlock(:,:,ii) = pointAttributes.LaserReturns(randomSample,:)';
     intensityBlock(:,:,ii) = ptCloud.Intensity(randomSample,:)';
     %classBlock = single(true([1 tileBlockPointNumber 1648]));
@@ -95,7 +97,7 @@ end
 
 blockLabel = single(ones([1 ii]));
 
-    dataSetSkogBridge(:,:,(ii+1):end) = [];
+    blockCoord(:,:,(ii+1):end) = [];
     returnNumberBlock(:,:,(ii+1):end) = [];
     intensityBlock(:,:,(ii+1):end) = [];
     pointLabel(:,(ii+1):end) = [];
