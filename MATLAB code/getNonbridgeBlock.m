@@ -1,21 +1,35 @@
-function [dataSetSkogNonbridge,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
+function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
     getNonbridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize)
-%UNTITLED6 Summary of this function goes here
-%   Detailed explanation goes here
+%  This function is used to get the tile block without bridge points from the
+%  laz file.   
+%   Detailed explanation goes here:
+%   Input: 
+%       ptCloud: point cloud data
+%       pointAttributes: the attributes of point cloud
+%       class: the class of points
+%       tileBlockPointNumber: number of points in unit tile block
+%       gridSize: the size of time block (m x m)
+%   Output:
+%       blockCoord: zero Centered XYZ coordinates (the location) of points 
+%                   in tile block
+%       intensityBlock: the intensity of the points in tile block
+%       returnNumberBlock: return numbers of the points in tile block
+
+% Find x,y limits for all grids(tile block) of the input point cloud data
 x = ptCloud.XLimits(1):gridSize:ptCloud.XLimits(2);
 y = ptCloud.YLimits(1):gridSize:ptCloud.YLimits(2);
-[X,Y] = meshgrid(x,y);
+% Set x,y limits as a matrix
+[X,Y] = meshgrid(x,y); 
 
 numberOfBlock = (length(x)-1)*(length(y)-1);
-% numberOfBlock = (length(x)-1)*(ii-1)+jj;
-dataSetSkogNonbridge = single(zeros([3 tileBlockPointNumber numberOfBlock]));
+
+% Create a 3 x pointsInOneTileBlock x totalTileBlocks empty matrix
+blockCoord = single(zeros([3 tileBlockPointNumber numberOfBlock]));
 returnNumberBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
 intensityBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
 
+% Create a empty array for tile block class 
 tileBlockClass = false([numberOfBlock,1]);
-% bridgePoints = pointAttributes.Classification == class;
-% 
-% xyzBridgePoints = ptCloud.Location(bridgePoints,:);
 
 currentPoints = ptCloud.Location; 
 
@@ -26,11 +40,9 @@ currentPoints = ptCloud.Location;
              pointsInBlockLimit = ...
             (currentPoints(:,1)<=X(ii,jj+1)) & (currentPoints(:,1)> X(ii,jj))& ...
             (currentPoints(:,2)<=Y(ii+1,jj)) & (currentPoints(:,2)>Y(ii,jj));
-
-         % Remove selected bridge points from currentPoints.
-            %currentPoints(pointsInBlockLimit,:) = [];    
-
-        %  xyzPointsInBlockLimit =  ptCloud.Location(pointsInBlockLimit,:);
+             centerCoord = [(X(ii,jj) + gridSize/2), (Y(ii,jj) + gridSize/2)];
+            
+            % Get the classes of point in the block limit
             numberOfClass = pointAttributes.Classification(find(pointsInBlockLimit),:);
 
             if ~any(numberOfClass(:)==class)
@@ -63,10 +75,11 @@ currentPoints = ptCloud.Location;
                     % Randomly sample tileBlockPointNumber points from the tiles block 
                     randomSample = datasample(find(pointsInBlockLimit),tileBlockPointNumber);
                 end
-
-                    %dataSetSkogNonbridge(:,:,((length(x)-1)*(ii-1)+jj)) = ptCloud.Location(randomSample,:)';
                 
-                    dataSetSkogNonbridge(:,:,((length(x)-1)*(ii-1)+jj)) = ptCloud.Location(randomSample,:)';
+                    blockCoord(:,:,((length(x)-1)*(ii-1)+jj)) = ptCloud.Location(randomSample,:)';
+                    
+                    % Zero center the blockCoor
+                    blockCoord(:,:,((length(x)-1)*(ii-1)+jj)) = zeroCenteringTileBlock( blockCoord(:,:,((length(x)-1)*(ii-1)+jj)),centerCoord);
                     returnNumberBlock(:,:,((length(x)-1)*(ii-1)+jj)) = pointAttributes.LaserReturns(randomSample,:)';
                     intensityBlock(:,:,((length(x)-1)*(ii-1)+jj)) = ptCloud.Intensity(randomSample,:)';
                     
@@ -77,10 +90,12 @@ currentPoints = ptCloud.Location;
         end
     end 
     
-    dataSetSkogNonbridge(:,:,tileBlockClass) = [];
+    % Remove the bridge block 
+    blockCoord(:,:,tileBlockClass) = [];
     returnNumberBlock(:,:,tileBlockClass) = [];
     intensityBlock(:,:,tileBlockClass) = [];
     
+    % Set point- and block label
     pointLabel = single(false([tileBlockPointNumber numberOfBlock-length(find(tileBlockClass))]));
     blockLabel = single(zeros([1 numberOfBlock-length(find(tileBlockClass))]));
     

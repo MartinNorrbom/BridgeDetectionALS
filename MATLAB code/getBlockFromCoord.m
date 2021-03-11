@@ -1,4 +1,4 @@
-function [dataSetSkog,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
+function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
     getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, coordinates,varargin)
 %getBlockFromCoord generates tile blocks from selected coordinates. It set
 % the current coordinate in the list to the middle of the tile block, then
@@ -21,7 +21,7 @@ function [dataSetSkog,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = 
 %           points from the neighbouring blocks.
 %       'RemovePositive': will remove tile blocks that contains bridges.
 %   Output:
-%       dataSetSkog: XYZ coordinates (the location) of points in tile block
+%       blockCoord: XYZ coordinates (the location) of points in tile block
 %       intensityBlock: the intensity of the points in tile block
 %       returnNumberBlock: return numbers of the points in tile block
 %       pointLabel: Label for each point in the tile blocks. 0 is non
@@ -102,12 +102,13 @@ function [dataSetSkog,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = 
 
     % Maximum number of tile blocks.
     numberOfBlock = size(coordinates,1);
+    %centerCoord = zeros(3,1);
 
     % Create a list to indicate if each coordinate has a tile block.
     coordinateCheckList = false(numberOfBlock,1);
     
     % Allocate space to return tile block data.
-    dataSetSkog = single(zeros([3 tileBlockPointNumber numberOfBlock]));
+    blockCoord = single(zeros([3 tileBlockPointNumber numberOfBlock]));
     returnNumberBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
     intensityBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
     pointLabel = single(zeros([tileBlockPointNumber numberOfBlock]));
@@ -126,7 +127,7 @@ function [dataSetSkog,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = 
             % coordinate in the middle.
             xLim = coordinates(coordCount,1)+[0.5,-0.5]*gridSize; 
             yLim = coordinates(coordCount,2)+[0.5,-0.5]*gridSize; 
-
+            
             % Select the coordinates that lie inside the tile block.
             coordInBlockLimit = ...
             (coordinates(:,1)<=xLim(1)) & (coordinates(:,1)>xLim(2))& ...
@@ -174,7 +175,9 @@ function [dataSetSkog,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = 
                 end
 
                 % Save the point features for the points in the tile block.
-                dataSetSkog(:,:,ii) = pointCoords(randomSample,:)';
+                blockCoord(:,:,ii) = pointCoords(randomSample,:)';
+                
+                blockCoord(:,:,ii) = zeroCenteringTileBlock(blockCoord(:,:,ii),coordinates(coordCount,:));
                 returnNumberBlock(:,:,ii) = pointLaserReturn(randomSample,:)';
                 intensityBlock(:,:,ii) = pointIntensity(randomSample,:)';
 
@@ -195,7 +198,7 @@ function [dataSetSkog,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = 
     % Remove empty index.
     if(ii < numberOfBlock)
         blockLabel(:,(ii+1):end) = [];
-        dataSetSkog(:,:,(ii+1):end) = [];
+        blockCoord(:,:,(ii+1):end) = [];
         returnNumberBlock(:,:,(ii+1):end) = [];
         intensityBlock(:,:,(ii+1):end) = [];
         pointLabel(:,(ii+1):end) = [];
@@ -208,7 +211,7 @@ function [dataSetSkog,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = 
 
         % Remove all data in tile blocks that contains bridges.
         blockLabel(:,indexToRemove) = [];
-        dataSetSkog(:,:,indexToRemove) = [];
+        blockCoord(:,:,indexToRemove) = [];
         returnNumberBlock(:,:,indexToRemove) = [];
         intensityBlock(:,:,indexToRemove) = [];
         pointLabel(:,indexToRemove) = [];
