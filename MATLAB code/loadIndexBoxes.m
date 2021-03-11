@@ -3,7 +3,7 @@ clc;
 
 % All the paths that are need.
 CoordinatesPath = '..\selectedCoordinates\';
-H5FileName = 'trainingDataSkogPointCNN.h5';
+H5FileName = 'B30_1024_Skane_Akermark_pointcnn.h5';
 generationFolder = '..\generatedData\';
 CoordinatesFileName = 'Koordinater.txt';
 serverName = "download-opendata.lantmateriet.se";
@@ -16,7 +16,7 @@ laserDataLocationInfo = 'utfall_laserdata_skog.shp';
 
 %%
 % Parameters for tile-blocks
-gridSize = 50;
+gridSize = 30;
 tileBlockPointNumber = 1024;
 class = 17;
 sizeIndexBlock = 2500;
@@ -53,10 +53,10 @@ getMissingFilesFromServer(filePathsAndNames,serverName,path1Server,dataLAZPath);
 % ---------------- Plot all the generate tile-blocks ----------------
 
 numberOfGeneratedBlocks = size(coordBlock,3);
-for ii=1:numberOfGeneratedBlocks
-    pcshow(coordBlock(:,:,ii)', intensityPlot(intensityBlock(1,:,ii),6))
-    w = waitforbuttonpress;
-end
+% for ii=1:numberOfGeneratedBlocks
+%     pcshow(coordBlock(:,:,ii)', intensityPlot(intensityBlock(1,:,ii),6))
+%     w = waitforbuttonpress;
+% end
 
 % --- Make clusters to make better visualization of the data. ---
 % GMModel = fitgmdist(dataSetSkog(:,:,jj)',5);
@@ -80,7 +80,7 @@ dataNum = int32(1:numberOfBlocks);
 % Create .h5 Data format
 saveTileBlocksH5(H5FileName,coordBlock(:,:,indToSave),blockLabel(1,indToSave),pointLabel(:,indToSave), ...
     "data_num",dataNum,"intensity",intensityBlock(:,:,indToSave), ...
-    "returnNumber",returnNumberBlock(:,:,indToSave),"path",generationFolder);
+    "returnNumber",returnNumberBlock(:,:,indToSave),"path",generationFolder,"PointCNN");
 
 % % Commands to read data.
 % dataRead = h5read([generationFolder,H5FileName],'/data');
