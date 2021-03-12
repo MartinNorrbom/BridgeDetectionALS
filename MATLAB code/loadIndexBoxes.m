@@ -5,7 +5,6 @@ clc;
 CoordinatesPath = '..\selectedCoordinates\';
 H5FileName = 'B30_1024_Skane_Akermark_pointcnn.h5';
 generationFolder = '..\generatedData\';
-CoordinatesFileName = 'Koordinater.txt';
 serverName = "download-opendata.lantmateriet.se";
 path1Server = '/Laserdata_Skog';
 %pathData = "/Laserdata_Skog/2019/19B030/"; % Example path to file in server.
