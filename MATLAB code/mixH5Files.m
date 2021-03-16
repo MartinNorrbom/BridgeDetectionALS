@@ -10,10 +10,21 @@ function [sizeOfFiles] = mixH5Files(fileName,inputFolder,outputFolder,maxFileSiz
     
     if(iscell(file))
         nrOfFiles = length(file);
+<<<<<<< Updated upstream
+=======
+        dataNames = cell(nrOfFiles,1);
+>>>>>>> Stashed changes
         
         for ii=1:nrOfFiles
             selectedFiles = dir([path,file{ii}]);
             sizeOfFiles = sizeOfFiles + selectedFiles.bytes;
+<<<<<<< Updated upstream
+=======
+            
+            % Store the datanames/slot-names.
+            h5InfoStruct = h5info([path,file{ii}]);
+            dataNames{ii} = {h5InfoStruct.Datasets.Name};
+>>>>>>> Stashed changes
         end
         
     else
@@ -21,10 +32,19 @@ function [sizeOfFiles] = mixH5Files(fileName,inputFolder,outputFolder,maxFileSiz
         selectedFiles = dir([path,file]);
         sizeOfFiles =  selectedFiles.bytes;
         
+<<<<<<< Updated upstream
+=======
+        
+        % Store the datanames/slot-names.
+        h5InfoStruct = h5info([path,file]);
+        dataNames = {h5InfoStruct.Datasets.Name};
+        
+>>>>>>> Stashed changes
         file = {file};
     end
     
     
+<<<<<<< Updated upstream
 
     
     dataTypesToSave = ["double","int32","int32","single"];
@@ -52,6 +72,38 @@ function [sizeOfFiles] = mixH5Files(fileName,inputFolder,outputFolder,maxFileSiz
     pointLabel = cat(2,pointLabelC{:});
     pointDataNum = cat(1,pointDataNumC{:});
     %pointFeat = cat(3,pointFeatC{:});
+=======
+    
+
+    % Define data types.
+    dataTypesToSave = ["double","int32","int32","single","single","single","int32"];
+    dataNameList = ["data","label","label_seg","data_num","geo_coord","intensity","return_number"];
+    namesIncluded = false(length(dataNameList),1);
+    numberOfDataSlots = length(namesIncluded);
+    
+    
+    % Get the data names that all the files got in common.
+    
+    dataFromFiles = cell(nrOfFiles,numberOfDataSlots);
+    
+    for ii=1:nrOfFiles
+        
+        tempFileName = fullfile(path,file{ii});
+        
+        
+        % Loop through all the selected dataNames/slots in the current file.
+        for jj=1:numberOfDataSlots
+            % Check if dataName/slot is included.
+            if(namesIncluded(jj))
+                % Store the data.
+                dataFromFiles{ii,jj} = h5read(tempFileName,strcat("/",dataNameList(jj)));
+            end
+        end
+        
+    end
+
+    pointCoord = cat(1,dataFromFiles{:});
+>>>>>>> Stashed changes
     
     numberOfBlocks = size(pointCoord,3);
     tileBlockPointNumber = size(pointCoord,2);
