@@ -44,7 +44,7 @@ getMissingFilesFromServer(filePathsAndNames,serverName,path1Server,dataLAZPath);
 % generationMethod = zeros(size(fileForCoordinates,1),3);
 % generationMethod(:,[1,2,3]) = 1;
 % Generate the tile blocks.
-[coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ... 
+[coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel,blockGeoCoord] = ... 
     generateTileBlocks(fileForCoordinates,generationMethod,gridSize, ...
     tileBlockPointNumber,class,"dataPath",dataLAZPath,"neighbours",neighbourFiles);
 
@@ -64,22 +64,24 @@ numberOfGeneratedBlocks = size(coordBlock,3);
 %%
 % To save a balanced training set.
 
-indexNonB = find(blockLabel == 0);
-indexB = find(blockLabel == 1);
-
-randNonB = randperm(length(indexNonB),length(indexB));
-
-indToSave = sort([indexB,indexNonB(randNonB)]);
+% indexNonB = find(blockLabel == 0);
+% indexB = find(blockLabel == 1);
+% 
+% randNonB = randperm(length(indexNonB),length(indexB));
+% 
+% indToSave = sort([indexB,indexNonB(randNonB)]);
 
 %%
-numberOfBlocks = length(indToSave);
+numberOfBlocks = size(coordBlock,3); %length(indToSave);
 
 dataNum = int32(1:numberOfBlocks);
 
+% GOT TO FEW GEOGRAPHIC COORDINATES!!!
 % Create .h5 Data format
-saveTileBlocksH5(H5FileName,coordBlock(:,:,indToSave),blockLabel(1,indToSave),pointLabel(:,indToSave), ...
-    "data_num",dataNum,"intensity",intensityBlock(:,:,indToSave), ...
-    "returnNumber",returnNumberBlock(:,:,indToSave),"path",generationFolder,"PointCNN");
+saveTileBlocksH5(H5FileName,coordBlock,blockLabel,pointLabel, ...
+    "data_num",dataNum,"intensity",intensityBlock, ...
+    "returnNumber",returnNumberBlock,"path",generationFolder, ...
+    "coordinates",blockGeoCoord');
 
 % % Commands to read data.
 % dataRead = h5read([generationFolder,H5FileName],'/data');

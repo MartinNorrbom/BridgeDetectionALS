@@ -5,7 +5,7 @@ clc;
 % training and validation sets.
 
 
-fileName = 'TestSet.h5';
+fileName = 'debugTest.h5';
 inputFolder = '..\generatedData\';
 outputFolder = '..\generatedData\TestSet\';
 

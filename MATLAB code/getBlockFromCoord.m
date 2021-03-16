@@ -1,4 +1,4 @@
-function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
+function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel,blockGeoCoord] = ...
     getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, coordinates,varargin)
 %getBlockFromCoord generates tile blocks from selected coordinates. It set
 % the current coordinate in the list to the middle of the tile block, then
@@ -105,6 +105,9 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
     %centerCoord = zeros(3,1);
 
     % Create a list to indicate if each coordinate has a tile block.
+    centerCoord = false(numberOfBlock,1);
+    
+    % To store center coordinates of the generated tile blocks.
     coordinateCheckList = false(numberOfBlock,1);
     
     % Allocate space to return tile block data.
@@ -122,7 +125,10 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
         % Count cordinate list.
         coordCount = coordCount+1;
         if(coordinateCheckList(coordCount) == false)
-
+            
+            % To return geografic coordinates.
+            centerCoord(coordCount) = true;
+            
             % Get the limits of the tile block, with the selected
             % coordinate in the middle.
             xLim = coordinates(coordCount,1)+[0.5,-0.5]*gridSize; 
@@ -216,6 +222,10 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
         intensityBlock(:,:,indexToRemove) = [];
         pointLabel(:,indexToRemove) = [];
     end
+    
+    % Return the center point of each tile block in geographic coordinates.
+    blockGeoCoord = coordinates(centerCoord,:);
+    
     
 end
 

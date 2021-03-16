@@ -17,23 +17,28 @@ function saveTileBlocksH5(H5FileName,blockCoord,blockLabel,pointLabel,varargin)
 %       'data_num': Is the index name for each tile block.
 %       'intensity': Is to save the intensity of each point.
 %       'returnNumber': Is to save the return number of each point.
+%       'coordinates': The location of each tile-block in geographic
+%           coordinates.
 
     % Check if there are any extra inputs.
     nrReqInputs = 4;
     extraInputs = nargin-nrReqInputs;
     
+    nrExFeatures = 5;
+    
     % To store information of extra inputs.
-    extraFeature = false(4,1);
-    extraFeatureInd = zeros(4,1);
-    algorithmInd = 1; % Set PointNet as default.
+    extraFeature = false(nrExFeatures,1);
+    extraFeatureInd = zeros(nrExFeatures,1);
+    
+    
+    % Define data types.
+    dataTypesToSave = ["double","int32","int32","single","single","single","int32"];
+    % Define supported data names/variants in h5.
+    dataNameList = ["data","label","label_seg","data_num","geo_coord","intensity","return_number"];
+    
     
     % Names of the extra inputs.
-    featureNamesWithInputArgument = ["path","data_num","intensity","returnNumber"];
-    inputAlgorithm = ["PointNet","PointNet++","PointCNN"];
-    
-    % The default data types to save in h5, format. The order is:
-    % [data,label,label_seg,normal]
-    dataTypesToSave = ["single","int8","int8","single"];
+    featureNamesWithInputArgument = ["path","data_num","intensity","returnNumber","coordinates"];
 
     % Check if there are any extra inputs.
     if( extraInputs > 0 )
@@ -46,16 +51,12 @@ function saveTileBlocksH5(H5FileName,blockCoord,blockLabel,pointLabel,varargin)
             
             featureInd = find( contains(featureNamesWithInputArgument,varargin{ii}) );
             
-            algorithmFound = find( contains(inputAlgorithm,varargin{ii}) );
-            
+
             if(~isempty(featureInd) && (length(featureInd) <= 1))
                 % Save basic info of the input.
                 extraFeature(featureInd) = true;
                 extraFeatureInd(featureInd) = ii+1;
                 ii = ii+2;
-            elseif(~isempty(algorithmFound))
-                algorithmInd = algorithmFound;
-                ii=ii+1;
             else
                 error(['Wrong input argument (',num2str(ii+nrReqInputs),').']);
             end
@@ -70,20 +71,6 @@ function saveTileBlocksH5(H5FileName,blockCoord,blockLabel,pointLabel,varargin)
         saveDestination = H5FileName;
     end
 
-    % Set data types to store if not PointNet.
-    if algorithmInd==2
-        
-        dataTypesToSave(1) = "double";
-        dataTypesToSave(2) = "int32";
-        dataTypesToSave(3) = "int32";
-        
-    elseif algorithmInd==3
-        
-        dataTypesToSave(1) = "double";
-        dataTypesToSave(2) = "int32";
-        dataTypesToSave(3) = "int32";
-        
-    end
     
     
     % Get parameters of tile blocks.
@@ -93,55 +80,44 @@ function saveTileBlocksH5(H5FileName,blockCoord,blockLabel,pointLabel,varargin)
     % Create a new h5-file and save slots in the file. Delete if there
     % already exist an h5-file with the same name.
     delete(saveDestination);
-    h5create(saveDestination,'/data',[size(blockCoord,1) tileBlockPointNumber numberOfBlocks],'Datatype', dataTypesToSave(1));
-    h5create(saveDestination,'/label',numberOfBlocks, 'Datatype',dataTypesToSave(2));
-    h5create(saveDestination,'/label_seg',[tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(3));
+    h5create(saveDestination,strcat("/",dataNameList(1)),[size(blockCoord,1) tileBlockPointNumber numberOfBlocks],'Datatype', dataTypesToSave(1));
+    h5create(saveDestination,strcat("/",dataNameList(2)),numberOfBlocks, 'Datatype',dataTypesToSave(2));
+    h5create(saveDestination,strcat("/",dataNameList(3)),[tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(3));
 
 
     % Save the tile blocks standard data to h5 format.
-    h5write(saveDestination,'/data',blockCoord );
-    h5write(saveDestination,'/label',blockLabel );
-    h5write(saveDestination,'/label_seg',pointLabel );
+    h5write(saveDestination,strcat("/",dataNameList(1)),blockCoord );
+    h5write(saveDestination,strcat("/",dataNameList(2)),blockLabel );
+    h5write(saveDestination,strcat("/",dataNameList(3)),pointLabel );
     
 
-    % If data_num needs to be saved.
+    % Save extra features.
     if(extraFeature(2))
 
-        h5create(saveDestination,'/data_num',numberOfBlocks, 'Datatype','int32');
-        h5write(saveDestination,'/data_num',varargin{extraFeatureInd(2)} );
+        h5create(saveDestination,strcat("/",dataNameList(4)),numberOfBlocks, 'Datatype','int32');
+        h5write(saveDestination,strcat("/",dataNameList(4)),varargin{extraFeatureInd(2)} );
         
     end
     
-    
-    % NEED TO IMPROVE THE WAY OF SAVING INTENSITY AND RETURN NUMBER!!!
-    
-    % If any extra feature is included.
-    if(extraFeature(3) || extraFeature(4))
+    if(extraFeature(5))
+        h5create(saveDestination,strcat("/",dataNameList(5)),[2 numberOfBlocks], 'Datatype',dataTypesToSave(5));
 
-        % Create a slot to store extra features from the points in the tile
-        % blocks.
-        h5create(saveDestination,'/normal',[3 tileBlockPointNumber numberOfBlocks],'Datatype',dataTypesToSave(4));
-
-        pointFeatures = single(zeros([3 tileBlockPointNumber numberOfBlocks]));
-        
-        % If intensity is included it will be saved in extra feature.
-        if(extraFeature(3))
-            pointFeatures(1,:,:) = varargin{extraFeatureInd(3)};
-        end
-        
-        % If return number is included it will be saved in extra feature.
-        if(extraFeature(4))
-            pointFeatures(2,:,:) = varargin{extraFeatureInd(4)};
-        end
-        
-        % Save the extra features.
-        h5write(saveDestination,'/normal',pointFeatures );
+        h5write(saveDestination,strcat("/",dataNameList(5)),varargin{extraFeatureInd(5)} );
     end
-    
-    
 
-%h5create('trainingDataSkog.h5','/indices_split_to_full',[1 tileBlockPointNumber numberOfBlocks],'Chunksize',[1 128 103], 'Deflate',1,'Datatype','int32');
 
+    if(extraFeature(3))
+        h5create(saveDestination,strcat("/",dataNameList(6)),[tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(6));
+
+        h5write(saveDestination,strcat("/",dataNameList(6)),varargin{extraFeatureInd(3)} );
+    end
+
+
+    if(extraFeature(4))
+        h5create(saveDestination,strcat("/",dataNameList(7)),[tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(7));
+
+        h5write(saveDestination,strcat("/",dataNameList(7)),varargin{extraFeatureInd(4)} );
+    end
     
 end
 
