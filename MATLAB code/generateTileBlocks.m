@@ -1,4 +1,4 @@
-function [coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ... 
+function [coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel,blockGeoCoord] = ... 
     generateTileBlocks(fileForCoordinates,generationMethod,gridSize,tileBlockPointNumber,class,varargin)
 %generateTileBlocks uses three methods to generate tile blocks from LAZ
 % files. The first one only capture tile blocks with bridges and capture
@@ -95,6 +95,8 @@ function [coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
     bufferPointClass = cell(nrLAZfiles,nrGenerationMethods);
     bufferTileBlockClass = cell(nrLAZfiles,nrGenerationMethods);
     
+    bufferBlockGeoCoord = cell(nrLAZfiles,nrGenerationMethods);
+    
     % Generate tile blocks for each LAZ file.
     for ii=1:nrLAZfiles
 
@@ -116,7 +118,8 @@ function [coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
             
                 [bufferPointCoord{ii,gBridge},bufferPointIntensity{ii,gBridge}, ...
                     bufferPointReturnNumber{ii,gBridge}, ...
-                    bufferPointClass{ii,gBridge},bufferTileBlockClass{ii,gBridge}] = ...
+                    bufferPointClass{ii,gBridge},bufferTileBlockClass{ii,gBridge}, ...
+                    bufferBlockGeoCoord{ii,gBridge} ] = ...
                     getBridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize);
             end
             
@@ -125,7 +128,8 @@ function [coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
                 
                 [bufferPointCoord{ii,gNonBridge},bufferPointIntensity{ii,gNonBridge}, ...
                     bufferPointReturnNumber{ii,gNonBridge}, ...
-                    bufferPointClass{ii,gNonBridge},bufferTileBlockClass{ii,gNonBridge}] = ...
+                    bufferPointClass{ii,gNonBridge},bufferTileBlockClass{ii,gNonBridge}, ...
+                    bufferBlockGeoCoord{ii,gNonBridge}] = ...
                     getNonbridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize);
             end
             
@@ -172,13 +176,15 @@ function [coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
                     % Capture the tile blocks with method 3.
                     [bufferPointCoord{ii,gCoord},bufferPointIntensity{ii,gCoord}, ...
                         bufferPointReturnNumber{ii,gCoord}, ...
-                        bufferPointClass{ii,gCoord},bufferTileBlockClass{ii,gCoord}] = ...
+                        bufferPointClass{ii,gCoord},bufferTileBlockClass{ii,gCoord}, ...
+                        bufferBlockGeoCoord{ii,gCoord} ] = ...
                         getBlockFromCoord(ptCloudObjects,ptAttrObjects,class,tileBlockPointNumber,gridSize, flip(coordinates,2),"neighbours");
                 else
                     % Capture the tile blocks with method 3 without neighbour buffering.
                     [bufferPointCoord{ii,gCoord},bufferPointIntensity{ii,gCoord}, ...
                         bufferPointReturnNumber{ii,gCoord}, ...
-                        bufferPointClass{ii,gCoord},bufferTileBlockClass{ii,gCoord}] = ...
+                        bufferPointClass{ii,gCoord},bufferTileBlockClass{ii,gCoord}, ...
+                        bufferBlockGeoCoord{ii,gCoord} ] = ...
                        getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, flip(coordinates,2));
                 end
             end
@@ -191,6 +197,9 @@ function [coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
     tempReturnNumber = reshape(bufferPointReturnNumber,[nrLAZfiles*nrGenerationMethods,1]);
     tempPointClass = reshape(bufferPointClass,[nrLAZfiles*nrGenerationMethods,1]);
     tempTileBlockClass = reshape(bufferTileBlockClass,[nrLAZfiles*nrGenerationMethods,1]);
+    
+    tempBlockGeoCoord = reshape(bufferBlockGeoCoord,[nrLAZfiles*nrGenerationMethods,1]);
+    
 
     % Find all the empty cells.
     cellsToRemove = find(cellfun('isempty', tempCoord));
@@ -202,12 +211,18 @@ function [coordBlock,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
     tempPointClass(cellsToRemove) = [];
     tempTileBlockClass(cellsToRemove) = [];
     
+    tempBlockGeoCoord(cellsToRemove) = [];
+    
     % Merge all the tile blocks of different LAZ-files to one array.
     coordBlock = cat(3,tempCoord{:});
     intensityBlock = cat(3,tempIntensity{:});
     returnNumberBlock = cat(3,tempReturnNumber{:});
     pointLabel = cat(2,tempPointClass{:});
     blockLabel = cat(2,tempTileBlockClass{:});
+    
+    blockGeoCoord = cat(1,tempBlockGeoCoord{:});
+    
+    blockGeoCoord = flip(blockGeoCoord,2);
     
 end
 

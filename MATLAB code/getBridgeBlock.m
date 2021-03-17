@@ -1,4 +1,4 @@
-function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
+function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel,blockGeoCoord] = ...
     getBridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize)
 %  This function is used to get the tile block with bridge points from the
 %  laz file.   
@@ -27,6 +27,8 @@ returnNumberBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
 intensityBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
 pointLabel = single(zeros([tileBlockPointNumber numberOfBlock]));
 
+blockGeoCoord = zeros([numberOfBlock 2]);
+
 currentBridgePoints = xyzBridgePoints; 
 
 % figure(5)
@@ -36,6 +38,8 @@ ii=0;
 while ~isempty(currentBridgePoints)
     ii = ii+1;
     currentXYZ = currentBridgePoints(1,:); %start with the first bridge point
+    
+    blockGeoCoord(ii,:) = currentBridgePoints(1,1:2);
     
     xLim = currentXYZ(1)+[0.5,-0.5]*gridSize; %+-50m in x axis from the current point
     yLim = currentXYZ(2)+[0.5,-0.5]*gridSize; %+-50m in y axis from the current point
@@ -95,11 +99,14 @@ while ~isempty(currentBridgePoints)
     
 end
 
-blockLabel = single(ones([1 ii]));
+    blockLabel = single(ones([1 ii]));
 
     blockCoord(:,:,(ii+1):end) = [];
     returnNumberBlock(:,:,(ii+1):end) = [];
     intensityBlock(:,:,(ii+1):end) = [];
     pointLabel(:,(ii+1):end) = [];
+    
+    blockGeoCoord((ii+1):end,:) = [];
+    
 end
 

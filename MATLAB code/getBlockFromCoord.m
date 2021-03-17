@@ -1,4 +1,4 @@
-function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
+function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel,blockGeoCoord] = ...
     getBlockFromCoord(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize, coordinates,varargin)
 %getBlockFromCoord generates tile blocks from selected coordinates. It set
 % the current coordinate in the list to the middle of the tile block, then
@@ -105,6 +105,9 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
     %centerCoord = zeros(3,1);
 
     % Create a list to indicate if each coordinate has a tile block.
+    centerCoord = false(numberOfBlock,1);
+    
+    % To store center coordinates of the generated tile blocks.
     coordinateCheckList = false(numberOfBlock,1);
     
     % Allocate space to return tile block data.
@@ -113,6 +116,7 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
     intensityBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
     pointLabel = single(zeros([tileBlockPointNumber numberOfBlock]));
     blockLabel = single(ones([1 numberOfBlock]));
+    blockGeoCoord = zeros(numberOfBlock,2);
 
     % Loops until all tile blocks are generated.
     ii=0;
@@ -122,7 +126,7 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
         % Count cordinate list.
         coordCount = coordCount+1;
         if(coordinateCheckList(coordCount) == false)
-
+            
             % Get the limits of the tile block, with the selected
             % coordinate in the middle.
             xLim = coordinates(coordCount,1)+[0.5,-0.5]*gridSize; 
@@ -183,6 +187,9 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
 
                 % Get point label for bridge point.
                 pointLabel(:,ii) = pointClass(randomSample,:)'==class;
+                
+                % Get coordinate of tile-block.
+                blockGeoCoord(ii,:) = coordinates(coordCount,1:2);
 
                 % Label the whole block.
                 if( sum(pointLabel(:,ii)) <= 0  )
@@ -202,6 +209,8 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
         returnNumberBlock(:,:,(ii+1):end) = [];
         intensityBlock(:,:,(ii+1):end) = [];
         pointLabel(:,(ii+1):end) = [];
+        
+        blockGeoCoord((ii+1):end,:) = [];
     end
 
     % If removal of bridges is enabled.
@@ -215,7 +224,12 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = .
         returnNumberBlock(:,:,indexToRemove) = [];
         intensityBlock(:,:,indexToRemove) = [];
         pointLabel(:,indexToRemove) = [];
+        
+        blockGeoCoord(indexToRemove,:) = [];
     end
+    
+
+
     
 end
 

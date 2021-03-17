@@ -1,4 +1,4 @@
-function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel] = ...
+function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel,blockGeoCoord] = ...
     getNonbridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize)
 %  This function is used to get the tile block without bridge points from the
 %  laz file.   
@@ -27,6 +27,8 @@ numberOfBlock = (length(x)-1)*(length(y)-1);
 blockCoord = single(zeros([3 tileBlockPointNumber numberOfBlock]));
 returnNumberBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
 intensityBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
+
+blockGeoCoord = zeros([numberOfBlock 2]);
 
 % Create a empty array for tile block class 
 tileBlockClass = false([numberOfBlock,1]);
@@ -83,6 +85,8 @@ currentPoints = ptCloud.Location;
                     returnNumberBlock(:,:,((length(x)-1)*(ii-1)+jj)) = pointAttributes.LaserReturns(randomSample,:)';
                     intensityBlock(:,:,((length(x)-1)*(ii-1)+jj)) = ptCloud.Intensity(randomSample,:)';
                     
+                    blockGeoCoord(((length(x)-1)*(ii-1)+jj),:) = [X(ii,jj+1)-gridSize/2,Y(ii+1,jj)-gridSize/2];
+                    
             else
                 tileBlockClass( ((length(x)-1)*(ii-1)+jj) ) = true;
             end
@@ -94,6 +98,10 @@ currentPoints = ptCloud.Location;
     blockCoord(:,:,tileBlockClass) = [];
     returnNumberBlock(:,:,tileBlockClass) = [];
     intensityBlock(:,:,tileBlockClass) = [];
+    
+    % Return the greografic location of the tile block.
+    blockGeoCoord(tileBlockClass,:) = [];
+
     
     % Set point- and block label
     pointLabel = single(false([tileBlockPointNumber numberOfBlock-length(find(tileBlockClass))]));
