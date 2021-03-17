@@ -1,6 +1,19 @@
-function [sizeOfFiles] = mixH5Files(fileName,inputFolder,outputFolder,maxFileSize)
-%mixH5Files Summary of this function goes here
-%   Detailed explanation goes here
+function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize)
+%mixH5Files Merge h5 files to create data set from different h5 files. When
+% this function is running a GUI shows up where the user can select the h5
+% files to merge. Then this function check the information that is stored
+% in the h5 files and combine the datanames/slots that the files have in
+% common. Then it randomize the order of the samples in the data to make it
+% ready to be used as input for machine learning. The user can also decide
+% the maximum file size of the output files, then multiple output files
+% will be generated if the total file size bigger than the maximum file
+% size.
+
+%   Input: 
+%       fileName: The base name of the output files.
+%       inputFolder: The folder where the input data is located.
+%       outputFolder: The folder where the output data should be located.
+%       maxFileSize: The maximum size of the output files(in megabytes).
 
 
     % Define data types.

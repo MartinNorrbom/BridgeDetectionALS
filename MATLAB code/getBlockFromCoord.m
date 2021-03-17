@@ -116,6 +116,7 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel,bloc
     intensityBlock = single(zeros([1 tileBlockPointNumber numberOfBlock]));
     pointLabel = single(zeros([tileBlockPointNumber numberOfBlock]));
     blockLabel = single(ones([1 numberOfBlock]));
+    blockGeoCoord = zeros(numberOfBlock,2);
 
     % Loops until all tile blocks are generated.
     ii=0;
@@ -125,9 +126,6 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel,bloc
         % Count cordinate list.
         coordCount = coordCount+1;
         if(coordinateCheckList(coordCount) == false)
-            
-            % To return geografic coordinates.
-            centerCoord(coordCount) = true;
             
             % Get the limits of the tile block, with the selected
             % coordinate in the middle.
@@ -189,6 +187,9 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel,bloc
 
                 % Get point label for bridge point.
                 pointLabel(:,ii) = pointClass(randomSample,:)'==class;
+                
+                % Get coordinate of tile-block.
+                blockGeoCoord(ii,:) = coordinates(coordCount,1:2);
 
                 % Label the whole block.
                 if( sum(pointLabel(:,ii)) <= 0  )
@@ -208,6 +209,8 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel,bloc
         returnNumberBlock(:,:,(ii+1):end) = [];
         intensityBlock(:,:,(ii+1):end) = [];
         pointLabel(:,(ii+1):end) = [];
+        
+        blockGeoCoord((ii+1):end,:) = [];
     end
 
     % If removal of bridges is enabled.
@@ -221,11 +224,12 @@ function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel,bloc
         returnNumberBlock(:,:,indexToRemove) = [];
         intensityBlock(:,:,indexToRemove) = [];
         pointLabel(:,indexToRemove) = [];
+        
+        blockGeoCoord(indexToRemove,:) = [];
     end
     
-    % Return the center point of each tile block in geographic coordinates.
-    blockGeoCoord = coordinates(centerCoord,:);
-    
+
+
     
 end
 

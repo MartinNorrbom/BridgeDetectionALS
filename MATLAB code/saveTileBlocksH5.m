@@ -107,14 +107,14 @@ function saveTileBlocksH5(H5FileName,blockCoord,blockLabel,pointLabel,varargin)
 
 
     if(extraFeature(3))
-        h5create(saveDestination,strcat("/",dataNameList(6)),[tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(6));
+        h5create(saveDestination,strcat("/",dataNameList(6)),[1 tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(6));
 
         h5write(saveDestination,strcat("/",dataNameList(6)),varargin{extraFeatureInd(3)} );
     end
 
 
     if(extraFeature(4))
-        h5create(saveDestination,strcat("/",dataNameList(7)),[tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(7));
+        h5create(saveDestination,strcat("/",dataNameList(7)),[1 tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(7));
 
         h5write(saveDestination,strcat("/",dataNameList(7)),varargin{extraFeatureInd(4)} );
     end

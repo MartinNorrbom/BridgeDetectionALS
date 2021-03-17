@@ -3,7 +3,7 @@ clc;
 
 % All the paths that are need.
 CoordinatesPath = '..\selectedCoordinates\';
-H5FileName = 'B30_1024_Skane_Akermark_pointcnn.h5';
+H5FileName = 'B30_1024_DebugTest.h5';
 generationFolder = '..\generatedData\';
 serverName = "download-opendata.lantmateriet.se";
 path1Server = '/Laserdata_Skog';
