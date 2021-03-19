@@ -3,7 +3,7 @@ import sys
 import numpy as np
 
 import accessDataFiles
-import returnGeoCoord
+import analys_functions
 
 
 def analys_ALS(filename):
@@ -17,7 +17,7 @@ def analys_ALS(filename):
     accessDataFiles.load_h5_analys_data(filename[0])
     
     if( len(geo_coord) > 0 ):
-        returnGeoCoord.saveCoordinatesText("coordinates.txt",geo_coord,label_block,pred_label)
+        analys_functions.saveCoordinatesText("coordinates.txt",geo_coord,label_block,pred_label)
 
 
 
