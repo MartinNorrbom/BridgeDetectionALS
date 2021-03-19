@@ -14,7 +14,7 @@ __pycache__/
 *.so
 *events.out.tfevents*
 *log/
-
+*log_eval/
 
 Generated Data
 *.h5
