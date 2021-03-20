@@ -8,6 +8,16 @@
 
  
 ##---------------------------------------------------
+
+__pycache__/
+*.py[cod]
+*.so
+*events.out.tfevents*
+*log/
+*log_eval/
+*train_results/
+*meta/
+
 Generated Data
 *.h5
 
