@@ -14,8 +14,8 @@ import imageio
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
 sys.path.append(BASE_DIR)
-sys.path.append(os.path.join(ROOT_DIR, '../pointNET2/models'))
-sys.path.append(os.path.join(ROOT_DIR, '../pointNET2/utils'))
+sys.path.append(os.path.join(ROOT_DIR, '../ML_Algorithms/pointNET2/models/'))
+sys.path.append(os.path.join(ROOT_DIR, '../ML_Algorithms/pointNET2/utils/'))
 import accessDataFiles
 import analysis_ALS
 
@@ -167,6 +167,7 @@ def eval_one_epoch(sess, ops, num_votes=1, topk=1):
             #for i in range(start_idx, end_idx):
 
         accessDataFiles.add_predictions_h5(currentResFile,pred_label)
+        
     
         
     print("Accuracy: " + str(total_correct/np.float(total_seen)) )

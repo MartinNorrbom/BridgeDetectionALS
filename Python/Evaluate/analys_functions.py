@@ -1,6 +1,6 @@
 import numpy as np
 import pptk
-import h5py 
+import h5py
 import importlib
 import math
 import os, os.path, sys 
@@ -53,15 +53,10 @@ def get_concat_h(im1, im2,im3):
 # Merge the multiple images to one image in vertical direction
 def get_concat_v(im1, im2):ggplot
 # Plot the point cloud in 3D view with pptk 
-def point_cloud_3D_view_plot(h5_filename,pred_lab,block_num):
+def point_cloud_3D_view_plot(PointData,label_seg,pred_lab,block_num):
     num_image = 3 # Print 3 images with 3 angel of view
     img = []
 
-    # Read the .h5 file
-    f = h5py.File(h5_filename,'r+')
-    PointData = f['data'][block_num] # get data 
-    label_seg = f['label_seg'][block_num] # get the point label
-    f.close()
     # PointDataSize = PointData.shape[0]
     # dataDim = PointData.shape[1]
     labelSize = label_seg.shape[0] # get data label size
@@ -128,7 +123,7 @@ def point_cloud_3D_view_plot(h5_filename,pred_lab,block_num):
 
 
 # Roc and AUC analys, function returns AUC value and plot/save an ROC AUC plot
-def ROC_AUC_analys_plot(y_actural_label,y_score):
+def ROC_AUC_analys_plot(y_actural_label,y_score,filename):
     # Get the fpr(false positve rate), tpr(true positive rate) and threshold
     fpr, tpr, threshold = metrics.roc_curve(y_actural_label, y_score)
     tpr_sum = np.sum(tpr)
@@ -148,7 +143,7 @@ def ROC_AUC_analys_plot(y_actural_label,y_score):
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     #plt.show()
-    plt.savefig('ROC AUC.png', format='png')
+    plt.savefig(filename, format='png')
     plt.close()
     return (fpr,tpr,roc_auc)
 
@@ -183,7 +178,7 @@ def youdens_index_analys(y_actural_label,y_pred_label):
 
 
 # Function generates the confusion matrix plot    
-def confusion_matrix_plot(y_actural_label,y_pred_label):   
+def confusion_matrix_plot(y_actural_label,y_pred_label,filename):   
     labels = ['0', '1'] # Set the class label, we have only 2 classes here
     tick_marks = np.array(range(len(labels))) + 0.5
     def plot_confusion_matrix(cm, title='Confusion Matrix', cmap = plt.cm.binary):
@@ -220,5 +215,5 @@ def confusion_matrix_plot(y_actural_label,y_pred_label):
     plt.gcf().subplots_adjust(bottom=0.15)  
     plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
     # plt.show()
-    plt.savefig('confusion_matrix.png', format='png')
+    plt.savefig(filename, format='png')
     plt.close()
