@@ -13,7 +13,7 @@ import tf_util
 from pointnet_util import pointnet_sa_module
 
 def placeholder_inputs(batch_size, num_point):
-    pointclouds_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point, 3))
+    pointclouds_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point, 5))
     labels_pl = tf.placeholder(tf.int32, shape=(batch_size))
     return pointclouds_pl, labels_pl
 
@@ -22,8 +22,8 @@ def get_model(point_cloud, is_training, bn_decay=None):
     batch_size = point_cloud.get_shape()[0].value
     num_point = point_cloud.get_shape()[1].value
     end_points = {}
-    l0_xyz = point_cloud
-    l0_points = None
+    l0_xyz = tf.slice(point_cloud, [0,0,0], [-1,-1,3])      # [x,y,z] coordinates
+    l0_points = tf.slice(point_cloud, [0,0,3], [-1,-1,2])   # Intensity and return number
     end_points['l0_xyz'] = l0_xyz
 
     # Set abstraction layers
