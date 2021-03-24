@@ -5,9 +5,9 @@ clc;
 % training and validation sets.
 
 
-fileName = 'debugTest.h5';
+fileName = 'B30_P1024_TrainOnlyBridges_Goteborg.h5';
 inputFolder = '..\generatedData\';
-outputFolder = '..\generatedData\TestSet\';
+outputFolder = '..\generatedData\TrainingSet\';
 
 maximumFileSize = 100;
 

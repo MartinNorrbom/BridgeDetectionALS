@@ -66,7 +66,7 @@ function saveTileBlocksH5(H5FileName,blockCoord,blockLabel,pointLabel,varargin)
 
     % Check where to save the file.
     if(extraFeature(1))
-        saveDestination = [varargin{extraFeatureInd(1)},H5FileName];
+        saveDestination = strcat(varargin{extraFeatureInd(1)},H5FileName);
     else
         saveDestination = H5FileName;
     end
