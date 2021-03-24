@@ -1,5 +1,5 @@
 function [selectedCoordinates,coordinatesFound] = ...
-    readCoordinates(CoordinatesPath,CoordinatesFileName,coordDistance)
+    readCoordinates(CoordinatesLocation,coordDistance)
 %readCoordinates Groups and interpolated coordinates in a text-file. Empty
 % spaces between coordninates futherst down in the file indicates that 
 % there is multple groups of coordinate that forms a polygon.
@@ -19,7 +19,7 @@ function [selectedCoordinates,coordinatesFound] = ...
 
 
     % Read the text file for the selected coordinates.
-    textDataSelectedPoints = readlines([CoordinatesPath,CoordinatesFileName]);
+    textDataSelectedPoints = readlines(CoordinatesLocation);
     
     
     % Get the "SWEREF 99 TM" coordinates

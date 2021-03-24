@@ -21,7 +21,7 @@ function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize)
     % Define supported data names/variants in h5.
     dataNameList = ["data","label","label_seg","data_num","geo_coord","intensity","return_number"];
     % Dimensions to merge, while merging data slots from different files.
-    catDim = [3,1,2,1,1,2,2];
+    catDim = [3,1,2,1,2,3,3];
     % Get number of data slots.
     numberOfDataSlots = length(dataNameList);
 
@@ -203,16 +203,16 @@ function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize)
         
         
         if(namesIncluded(6))
-            h5create(saveName,strcat("/",dataNameList(6)),[tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(6));
+            h5create(saveName,strcat("/",dataNameList(6)),[1 tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(6));
             
-            h5write(saveName,strcat("/",dataNameList(6)),dataSlots{6}(:,currentIndex) );
+            h5write(saveName,strcat("/",dataNameList(6)),dataSlots{6}(1,:,currentIndex) );
         end
         
                 
         if(namesIncluded(7))
-            h5create(saveName,strcat("/",dataNameList(7)),[tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(7));
+            h5create(saveName,strcat("/",dataNameList(7)),[1 tileBlockPointNumber numberOfBlocks], 'Datatype',dataTypesToSave(7));
             
-            h5write(saveName,strcat("/",dataNameList(7)),dataSlots{7}(:,currentIndex) );
+            h5write(saveName,strcat("/",dataNameList(7)),dataSlots{7}(1,:,currentIndex) );
         end
         
     end
