@@ -1,4 +1,4 @@
-function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize)
+function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize,proportion,propName)
 %mixH5Files Merge h5 files to create data set from different h5 files. When
 % this function is running a GUI shows up where the user can select the h5
 % files to merge. Then this function check the information that is stored
@@ -126,13 +126,141 @@ function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize)
         end
     end
     
-    % Get number of tile-blocks/samples in the data.
-    numberOfBlocks = size(dataSlots{1},3);
+    % Check if proportion object is specified.
+    if(~isempty(propName))
+        % Check proportion name and if segmentation label is provided in the data.
+        if(strcmp(propName,"segmentation") && namesIncluded(3))
+        
+            disp(strcat("The proportion of segmentation labels is:",num2str(proportion)))
+            
+            % Get segmentation label.
+            allLabel_Seg = dataSlots{3};
+            
+            % Get number of blocks.
+            nrSamples = size(allLabel_Seg,2);
+            % Get number of points.
+            nrPoints = size(allLabel_Seg,1);
+            % Get number of positive and negative labels of segmentation
+            % label.
+            nrN_Seg = sum(allLabel_Seg == 0,'all');
+            nrP_Seg = sum(allLabel_Seg == 1,'all');
+            
+            % Get the number of negative labels to not change the number of
+            % positive labels.
+            NrN_Seg_Req = nrP_Seg/proportion-nrP_Seg;
+            % Get the number of positive labels to not change the number of
+            % negative labels.
+            NrP_Seg_Req = nrN_Seg/(1-proportion)-nrN_Seg;
+            
+            % Get the labels of the samples (could have read dataSlots{2}... )
+            Plabel_sIndex = sum(allLabel_Seg,1) >= 1;
+            Plabel_sample = sum( Plabel_sIndex );
+            Nlabel_sample = sum( sum(allLabel_Seg,1) == 0 );
+            
+            % Check if it is possible to change the number of negative
+            % segmentation labels to fulfill the desired proportion.
+            if( NrN_Seg_Req <= nrN_Seg )
+                
+                NrN_Seg_With_Bridge_Label = sum(allLabel_Seg(:,Plabel_sIndex)==0,'all');
+                
+                % Get the number of negative samples needed. 
+                reducedN = round( (NrN_Seg_Req-NrN_Seg_With_Bridge_Label)/nrPoints );
+                
+                % Check if proportion is possible.
+                if( reducedN < 0 )
+                    % Not possible try to do as best it can bee.
+                    disp("Can not upfill label segmentation proportion.")
+                    
+                    nrN_Seg = nrN_Seg - Nlabel_sample*nrPoints;
+                    
+                    disp(strcat("The generated proportion will be: ",num2str(nrP_Seg/(nrN_Seg+nrP_Seg))))
+                    proportion = 1;
+                    
+                else
+                    % Possible to establish the proportion.
+                    proportion = Plabel_sample/(Plabel_sample+reducedN);
+                end
+                
+            % Check if it is possible to change the number of positive
+            % segmentation labels to fulfill the desired proportion.
+            elseif( NrP_Seg_Req <= nrP_Seg )
+                
+                % Get the average number of positive segment label per
+                % positive sample.
+                poistivePointsPerSample = nrP_Seg/Plabel_sample;
+                
+                % Get the number of positive samples needed.
+                reducedP = round( NrP_Seg_Req/poistivePointsPerSample );
+                
+                % Get the proportion
+                proportion = reducedP/(reducedP+Nlabel_sample);
+
+            else
+                disp("WARNING: The specified propotion of segmentation labels is not possible to generate.")
+                error("Error: Combine data failed.")     
+            end
+        
+        end
+    end
+    
+    
+    % Check if the data set should be balanced and that the data is labeled.
+    if(~isempty(proportion) && namesIncluded(2))
+        
+        disp(strcat("The proportion of labels is:",num2str(proportion)))
+        
+        allLabels = dataSlots{2};
+        
+        indPLabels = find( allLabels == 1 );
+        indNLabels = find( allLabels == 0 );
+        
+        allIndex = 1:length(allLabels);
+        nrPL = length(indPLabels);
+        nrNL = length(indNLabels);
+        
+        PDesiredNrN = nrPL/proportion-nrPL;
+        NDesiredNrP = nrNL/(1-proportion)-nrNL;
+        
+        if(PDesiredNrN <= nrNL)
+            
+            indexToRm = randperm(nrNL, (nrNL - ceil(PDesiredNrN)));
+            
+            indexToRm = indNLabels(indexToRm);
+            
+        elseif(NDesiredNrP <= nrPL)
+        
+            indexToRm = randperm(nrPL, (nrPL - ceil(NDesiredNrP)));
+            
+            indexToRm = indPLabels(indexToRm);
+            
+        else
+            disp("WARNING: The specified propotion is not possible to generate.")
+            error("Error: Combine data failed.")            
+        end
+        
+        allIndex(indexToRm) = [];
+        
+        % Get number of samples.
+        numberOfBlocks = length(allIndex);
+        
+        % Get a random sequence of indicies.
+        randomSequence = randperm(numberOfBlocks);
+        % Randomize the data.
+        randomIndex = allIndex(randomSequence);
+    else
+        
+        % Get number of tile-blocks/samples in the data.
+        numberOfBlocks = size(dataSlots{1},3);
+        
+        % Randomize the data
+        randomIndex = randperm(numberOfBlocks);
+        
+    end
+    
+    
+
     % Get the number of points per tile-block/sample.
     tileBlockPointNumber = size(dataSlots{1},2);
-    
-    % Randomize the data
-    randomIndex = randperm(numberOfBlocks);
     
     % To get size in Megabytes
     sizeOfFiles = round(sizeOfFiles/10^6);
