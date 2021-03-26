@@ -37,12 +37,20 @@ ii=0;
 
 while ~isempty(currentBridgePoints)
     ii = ii+1;
-    currentXYZ = currentBridgePoints(1,:); %start with the first bridge point
     
-    blockGeoCoord(ii,:) = currentBridgePoints(1,1:2);
+    % To prevent from always having a bridge point at center of the center 
+    % of a tuke block, there will be a random offset from where the 
+    % generated tile block will be located. The current bridge point will
+    % always be within a square that 90% of the tile block closest to the 
+    % center of the generated tile block. 
+    randomOffset = (rand(1,2)-0.5)*(gridSize*0.75); 
     
-    xLim = currentXYZ(1)+[0.5,-0.5]*gridSize; %+-50m in x axis from the current point
-    yLim = currentXYZ(2)+[0.5,-0.5]*gridSize; %+-50m in y axis from the current point
+    % The center of the current tile block.
+    blockGeoCoord(ii,:) = currentBridgePoints(1,1:2)+randomOffset;
+    
+    % Set limits of the current tile block.
+    xLim = blockGeoCoord(ii,1)+[0.5,-0.5]*gridSize; %+-50m in x axis from the current point
+    yLim = blockGeoCoord(ii,2)+[0.5,-0.5]*gridSize; %+-50m in y axis from the current point
     
     % Select the bridge points that lie inside the tile block
     bridgeInBlockLimit = ...
@@ -88,19 +96,19 @@ while ~isempty(currentBridgePoints)
     % Store tile blocks from randomly sampled points
     blockCoord(:,:,ii) = ptCloud.Location(randomSample,:)';
     
-    blockCoord(:,:,ii) = zeroCenteringTileBlock( blockCoord(:,:,ii),currentXYZ);
+    blockCoord(:,:,ii) = zeroCenteringTileBlock( blockCoord(:,:,ii),blockGeoCoord(ii,:));
     returnNumberBlock(:,:,ii) = pointAttributes.LaserReturns(randomSample,:)';
     intensityBlock(:,:,ii) = ptCloud.Intensity(randomSample,:)';
-    %classBlock = single(true([1 tileBlockPointNumber 1648]));
    
     % Get point label for bridge point
     pointLabel(:,ii) = pointAttributes.Classification(randomSample,:)'==17;
     
     
 end
-
+    % Set all tile block labels to positiv.
     blockLabel = single(ones([1 ii]));
 
+    % Remove the unallocated data.
     blockCoord(:,:,(ii+1):end) = [];
     returnNumberBlock(:,:,(ii+1):end) = [];
     intensityBlock(:,:,(ii+1):end) = [];

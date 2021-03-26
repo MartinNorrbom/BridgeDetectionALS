@@ -5,8 +5,11 @@ clc;
 % is files in h5 format that contains tile blocks over the selected areas.
 
 % Parameters for tile-blocks
-gridSize             = [ 20, 30,  30,  40,  40,  50,  50,  60];
-tileBlockPointNumber = [512,512,1024,1024,2048,2048,4096,4096];
+% gridSize             = [ 20, 30,  30,  40,  40,  50,  50,  60];
+% tileBlockPointNumber = [512,512,1024,1024,2048,2048,4096,4096];
+
+gridSize             = 50;
+tileBlockPointNumber = 4096;
 
 % Info of LAZ file
 % "class" represent the class that will be labeled in the training data.
@@ -18,7 +21,7 @@ sizeIndexBlock = 2500;
 
 % User parameters
 gui = 1;
-sepFiles = 1;
+sepFiles = 0;
 
 % All the paths that are needed.
 CoordinatesPath = '..\selectedCoordinates\';

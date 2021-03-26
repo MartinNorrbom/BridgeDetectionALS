@@ -5,11 +5,12 @@ clc;
 % training and validation sets.
 
 
-fileName = 'B30_P1024_TrainOnlyBridges_Goteborg.h5';
+fileName = 'B30_P1024_TrainSet_CLS.h5';
 inputFolder = '..\generatedData\';
-outputFolder = '..\generatedData\TrainingSet\';
+outputFolder = '..\generatedData\DataSet\';
 
 maximumFileSize = 100;
 
+proportion = 0.50;
 
-mixH5Files(fileName,inputFolder,outputFolder,maximumFileSize)
+mixH5Files(fileName,inputFolder,outputFolder,maximumFileSize,proportion,[]);%"segmentation")
