@@ -14,7 +14,13 @@ function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize,proportion,pro
 %       inputFolder: The folder where the input data is located.
 %       outputFolder: The folder where the output data should be located.
 %       maxFileSize: The maximum size of the output files(in megabytes).
-
+%       proportion: Specify the percent of the tile blocks or points that
+%           should be labeled positive (1). If the input is empty ("[]"), 
+%           all the available data will be combined.
+%       propName: Specifies if the "proportion" should be used on tile 
+%           blocks labels or segmentation labels. For segmentation the
+%           input must be "segmentation" otherwise block labels will be
+%           used.
 
     % Define data types.
     dataTypesToSave = ["double","int32","int32","single","single","single","int32"];
@@ -131,7 +137,7 @@ function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize,proportion,pro
         % Check proportion name and if segmentation label is provided in the data.
         if(strcmp(propName,"segmentation") && namesIncluded(3))
         
-            disp(strcat("The proportion of segmentation labels is:",num2str(proportion)))
+            disp(strcat("The proportion of segmentation labels is: ",num2str(proportion)))
             
             % Get segmentation label.
             allLabel_Seg = dataSlots{3};
@@ -206,38 +212,51 @@ function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize,proportion,pro
     
     % Check if the data set should be balanced and that the data is labeled.
     if(~isempty(proportion) && namesIncluded(2))
-        
-        disp(strcat("The proportion of labels is:",num2str(proportion)))
-        
+        % Print the desired proportion of the data.
+        disp(strcat("The proportion of labels is: ",num2str(proportion)))
+        % Get all labels.
         allLabels = dataSlots{2};
-        
+        % Get indecies of positive and negative labels.
         indPLabels = find( allLabels == 1 );
         indNLabels = find( allLabels == 0 );
         
+        % Get an array with all indecies of the labels.
         allIndex = 1:length(allLabels);
+        % Get number of positive and negaive labels.
         nrPL = length(indPLabels);
         nrNL = length(indNLabels);
         
+        % Get desired number of negative labels to keep positive labels
+        % untouched.
         PDesiredNrN = nrPL/proportion-nrPL;
+        % Get desired number of positive labels to keep negative labels
+        % untouched.
         NDesiredNrP = nrNL/(1-proportion)-nrNL;
         
+        % If negaitve labels can be reduced.
         if(PDesiredNrN <= nrNL)
             
+            % Get a set of negative indecies to remove.
             indexToRm = randperm(nrNL, (nrNL - ceil(PDesiredNrN)));
-            
+            % Get global indecies to remove of the negative indecies.
             indexToRm = indNLabels(indexToRm);
             
+        % If positive labels can be reduced.
         elseif(NDesiredNrP <= nrPL)
         
+            % Get a set of positive indecies to remove.
             indexToRm = randperm(nrPL, (nrPL - ceil(NDesiredNrP)));
-            
+            % Get global indecies to remove of the positive indecies.
             indexToRm = indPLabels(indexToRm);
             
         else
+            
+            % If the requirements can not be satisfied.
             disp("WARNING: The specified propotion is not possible to generate.")
             error("Error: Combine data failed.")            
         end
         
+        % Remove gloabel indecies to fulfill the proportion.
         allIndex(indexToRm) = [];
         
         % Get number of samples.
@@ -247,6 +266,8 @@ function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize,proportion,pro
         randomSequence = randperm(numberOfBlocks);
         % Randomize the data.
         randomIndex = allIndex(randomSequence);
+    
+    % No proportion is required.
     else
         
         % Get number of tile-blocks/samples in the data.
@@ -257,7 +278,6 @@ function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize,proportion,pro
         
     end
     
-    
 
     % Get the number of points per tile-block/sample.
     tileBlockPointNumber = size(dataSlots{1},2);
@@ -265,7 +285,7 @@ function mixH5Files(fileName,inputFolder,outputFolder,maxFileSize,proportion,pro
     % To get size in Megabytes
     sizeOfFiles = round(sizeOfFiles/10^6);
     % Get the number of output files that is going to be created.
-    numberOutputFiles = ceil(sizeOfFiles/maxFileSize);
+    numberOutputFiles = ceil( (numberOfBlocks/size(dataSlots{1},3))*sizeOfFiles/maxFileSize);
     
     % Indexes of tile-blocks for each file.
     blockIndexFiles = ceil(linspace(0,numberOfBlocks,numberOutputFiles+1));
