@@ -30,13 +30,12 @@ function [selectedCoordinates,tileBlockGenerationMethod] = ...
 % This file contains coordinates that will use all the three method to
 % generate tile blocks.
 
+    % The number of methods to generate tile blocks.
+    nrGenerationMethods = 4;
     % The start name of the text files that 
     startName = 'Koordinater';
     % Get the length of the start name.
     startLengthName = size(startName,2);
-
-    % The number of methods to generate tile blocks.
-    numberOfmehtods = 3;
     
     
     % Check if multiple file is already selected.
@@ -67,7 +66,7 @@ function [selectedCoordinates,tileBlockGenerationMethod] = ...
     numberOfFiles = length(textFileNames);
     
     % Allocate matrix to set generation method for each text file.
-    generationMethodFile = zeros(numberOfFiles,3);
+    generationMethodFile = zeros(numberOfFiles,nrGenerationMethods);
     
     % Loop through all the names of the text files and get the generation
     % methods that should be used.
@@ -76,7 +75,7 @@ function [selectedCoordinates,tileBlockGenerationMethod] = ...
         % Name of the current text file.
         tempFileName = char(textFileNames(ii));
         % Set generation method for the current text file.
-        for jj=1:numberOfmehtods
+        for jj=1:nrGenerationMethods
             % Get a symbol after start name
             tempLetter = tempFileName(startLengthName+jj);
             
@@ -108,7 +107,7 @@ function [selectedCoordinates,tileBlockGenerationMethod] = ...
             bufferCoordinates{ii} = ...
                 readCoordinates(tempFileName,gridSize);
     
-        elseif( any( generationMethodFile(ii,1:2) == 1 ) )
+        elseif( any( generationMethodFile(ii,[1:2,4]) == 1 ) )
             % If other methods than method 3 is used, the interpolation can
             % be the half size of one index box/LAZ-file.
     
