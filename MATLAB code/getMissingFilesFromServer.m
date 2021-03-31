@@ -56,6 +56,7 @@ function getMissingFilesFromServer(filePathsAndNames,serverName,path1Server,vara
                 if ~contains(cFolder,[path1Server,filePathsAndNames{1}{ii}] )
                     cFolder = [path1Server,filePathsAndNames{1}{ii}];
                     cd(ftpobj,cFolder);
+                    contents = dir(ftpobj);
                 end
             end
             % Get the number of files that needs to be downloaded in
@@ -74,7 +75,6 @@ function getMissingFilesFromServer(filePathsAndNames,serverName,path1Server,vara
                         % Write user name and password for the ftp-server.
                         UserName = input('Write user name: \n','s');
                         Password = input('Write password: \n','s');
-                        % 
                         disp([repmat(char(8), 1, length(Password)+1)])
 
                         % Connect and login to the ftp server
@@ -84,11 +84,18 @@ function getMissingFilesFromServer(filePathsAndNames,serverName,path1Server,vara
                         % index box is located.
                         cFolder = [path1Server,filePathsAndNames{1}{ii}];
                         cd(ftpobj,cFolder);
+                        contents = dir(ftpobj);
                     end
 
                     % Download missing index box
                     disp(['Download: ',filePathsAndNames{2}{ii}(jj,:)])
-                    mget(ftpobj,filePathsAndNames{2}{ii}(jj,:),dataLAZPath);
+                    
+                    % Check if file is available in server.
+                    if( contains( strcat(contents(:).name),filePathsAndNames{2}{ii}(jj,:) ) )
+                        mget(ftpobj,filePathsAndNames{2}{ii}(jj,:),dataLAZPath);
+                    else
+                        disp(['File not found in server: ',filePathsAndNames{2}{ii}(jj,:)])
+                    end
 
                 end
             end

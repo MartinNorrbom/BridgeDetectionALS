@@ -34,9 +34,10 @@ function getTrainingData(gridSize,tileBlockPointNumber,class,sizeIndexBlock, ...
 
 
     % ----- Finds the LAZ-files for the selected coordinates ------
-    [filePathsAndNames,fileForCoordinates,generationMethod,neighbourFiles] = ...
-        getLAZFileFromCoord(manualSelectedCoordinates, dataLocationInfo,"Methods",tileBlockMethod,"neighbours");
-
+   [filePathsAndNames,fileForCoordinates,generationMethod,neighbourFiles] = ...
+       getLAZFileFromCoord(manualSelectedCoordinates, dataLocationInfo,"Methods",tileBlockMethod,"neighbours");
+%     [filePathsAndNames,fileForCoordinates,generationMethod] = ...
+%         getLAZFileFromCoord(manualSelectedCoordinates, dataLocationInfo,"Methods",tileBlockMethod);
     
     % ------------- Download all the missing files ----------------
     getMissingFilesFromServer(filePathsAndNames,serverName,path1Server,dataLAZPath);

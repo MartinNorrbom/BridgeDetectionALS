@@ -5,9 +5,9 @@ clc;
 % training and validation sets.
 
 
-fileName = 'B30_P1024_TrainSet_CLS.h5';
+fileName = 'B40_P1024_TrainSet_CLS.h5';
 inputFolder = '..\generatedData\';
-outputFolder = '..\generatedData\DataSet\';
+outputFolder = '..\generatedData\trainingSet_SM_2\B40_P1024\';
 
 maximumFileSize = 100;
 
