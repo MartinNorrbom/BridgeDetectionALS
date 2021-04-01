@@ -174,12 +174,12 @@ def train():
 
 def get_batch(dataset, idxs, start_idx, end_idx):
     bsize = end_idx-start_idx
-    batch_data = np.zeros((bsize, NUM_POINT, 6))
+    batch_data = np.zeros((bsize, NUM_POINT, 3))  # change from 6 to 3
     batch_label = np.zeros((bsize, NUM_POINT), dtype=np.int32)
     for i in range(bsize):
         ps,normal,seg = dataset[idxs[i+start_idx]]
         batch_data[i,:,0:3] = ps
-        batch_data[i,:,3:6] = normal
+       # batch_data[i,:,3:6] = normal
         batch_label[i,:] = seg
     return batch_data, batch_label
 

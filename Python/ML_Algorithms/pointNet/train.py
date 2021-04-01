@@ -64,9 +64,9 @@ HOSTNAME = socket.gethostname()
 # Write the paths text-files with the selected data. 
 # In our case the selected .h5 files that contains the training and test set.
 TRAIN_FILES = provider.getDataFiles( \
-    os.path.join(BASE_DIR, 'data/Lantmateriet/train_files.txt'))
+    os.path.join(BASE_DIR, '../../data/Lantmateriet/train_files.txt'))
 TEST_FILES = provider.getDataFiles(\
-    os.path.join(BASE_DIR, 'data/Lantmateriet/test_files.txt'))
+    os.path.join(BASE_DIR, '../../data/Lantmateriet/test_files.txt'))
 
 
 # Function to write a log in textfile and print it in terminal.
