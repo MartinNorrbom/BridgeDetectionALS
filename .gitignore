@@ -21,6 +21,9 @@ __pycache__/
 *data/
 Generated Data
 *.h5
+*.png
+
+
 
 # Windows default autosave extension
 *.asv

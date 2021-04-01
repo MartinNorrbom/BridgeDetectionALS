@@ -9,7 +9,7 @@ import tf_util
 from pointnet_util import pointnet_sa_module, pointnet_fp_module
 
 def placeholder_inputs(batch_size, num_point):
-    pointclouds_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point, 6))
+    pointclouds_pl = tf.placeholder(tf.float32, shape=(batch_size, num_point, 5))  # change from 6 to 3 features
     labels_pl = tf.placeholder(tf.int32, shape=(batch_size, num_point))
     return pointclouds_pl, labels_pl
 
@@ -20,7 +20,8 @@ def get_model(point_cloud, is_training, bn_decay=None):
     num_point = point_cloud.get_shape()[1].value
     end_points = {}
     l0_xyz = tf.slice(point_cloud, [0,0,0], [-1,-1,3])
-    l0_points = tf.slice(point_cloud, [0,0,3], [-1,-1,3])
+    l0_points = tf.slice(point_cloud, [0,0,3], [-1,-1,2])
+   # l0_points = tf.slice(point_cloud, [0,0,2])
 
     # Set Abstraction layers
     l1_xyz, l1_points, l1_indices = pointnet_sa_module(l0_xyz, l0_points, npoint=512, radius=0.2, nsample=64, mlp=[64,64,128], mlp2=None, group_all=False, is_training=is_training, bn_decay=bn_decay, scope='layer1')
@@ -36,7 +37,7 @@ def get_model(point_cloud, is_training, bn_decay=None):
     net = tf_util.conv1d(l0_points, 128, 1, padding='VALID', bn=True, is_training=is_training, scope='fc1', bn_decay=bn_decay)
     end_points['feats'] = net 
     net = tf_util.dropout(net, keep_prob=0.5, is_training=is_training, scope='dp1')
-    net = tf_util.conv1d(net, 2, 1, padding='VALID', activation_fn=None, scope='fc2') # Changed from 50 to 2.
+    net = tf_util.conv1d(net, 2, 1, padding='VALID', activation_fn=None, scope='fc2')  # change from 50 to 2 classes
 
     return net, end_points
 
@@ -52,6 +53,6 @@ def get_loss(pred, label):
 
 if __name__=='__main__':
     with tf.Graph().as_default():
-        inputs = tf.zeros((32,2048,6))
+        inputs = tf.zeros((32,2048,3))  # change from 6 to 3 features
         net, _ = get_model(inputs, tf.constant(True))
         print(net)

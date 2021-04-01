@@ -87,8 +87,8 @@ else:
     #TRAIN_DATASET = modelnet_h5_dataset.ModelNetH5Dataset(os.path.join(BASE_DIR, 'data/modelnet40_ply_hdf5_2048/train_files.txt'), batch_size=BATCH_SIZE, npoints=NUM_POINT, shuffle=True)
     #TEST_DATASET = modelnet_h5_dataset.ModelNetH5Dataset(os.path.join(BASE_DIR, 'data/modelnet40_ply_hdf5_2048/test_files.txt'), batch_size=BATCH_SIZE, npoints=NUM_POINT, shuffle=False)
 
-    TRAIN_DATASET = modelnet_h5_dataset.ModelNetH5Dataset(os.path.join(BASE_DIR, 'data/Lantmateriet/train_files.txt'), batch_size=BATCH_SIZE, npoints=NUM_POINT, shuffle=True)
-    TEST_DATASET = modelnet_h5_dataset.ModelNetH5Dataset(os.path.join(BASE_DIR, 'data/Lantmateriet/test_files.txt'), batch_size=BATCH_SIZE, npoints=NUM_POINT, shuffle=False)
+    TRAIN_DATASET = modelnet_h5_dataset.ModelNetH5Dataset(os.path.join(BASE_DIR, '../../data/Lantmateriet/train_files.txt'), batch_size=BATCH_SIZE, npoints=NUM_POINT, shuffle=True)
+    TEST_DATASET = modelnet_h5_dataset.ModelNetH5Dataset(os.path.join(BASE_DIR, '../../data/Lantmateriet/test_files.txt'), batch_size=BATCH_SIZE, npoints=NUM_POINT, shuffle=False)
 
 
 # Function to write a log in textfile and print it in terminal.
@@ -250,10 +250,10 @@ def train_one_epoch(sess, ops, train_writer):
         total_seen += bsize
         loss_sum += loss_val
 
-        # Print result after every 50 batch.
-        if (batch_idx+1)%50 == 0:
+        # Print result after every 200 batch.
+        if (batch_idx+1)%200 == 0:
             log_string(' ---- batch: %03d ----' % (batch_idx+1))
-            log_string('mean loss: %f' % (loss_sum / 50))
+            log_string('mean loss: %f' % (loss_sum / 200))
             log_string('accuracy: %f' % (total_correct / float(total_seen)))
             total_correct = 0
             total_seen = 0
