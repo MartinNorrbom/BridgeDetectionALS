@@ -17,10 +17,14 @@ __pycache__/
 *log_eval/
 *train_results/
 *meta/
-
+*TrainedModels/
+*TestResults/
 *data/
+
 Generated Data
 *.h5
+*.png
+*.zip
 
 # Windows default autosave extension
 *.asv

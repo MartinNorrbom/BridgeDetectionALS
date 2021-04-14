@@ -34,6 +34,34 @@ def loadDataFile_with_seg(filename):
     return load_h5_data_label_seg(filename)
 
 
+def load_h5_F5(filename,pointFeatures):
+    f = h5py.File(filename,'r')
+    XYZ = f['data'][:]
+    intens = f['intensity'][:]
+    rNumber = f['return_number'][:]
+    label = f['label'][:]
+    seg = f['label_seg'][:]
+
+    # Return the specified point features.
+    if(len(pointFeatures)==0):
+        data = np.copy(XYZ)
+    elif(len(pointFeatures)==1):
+        if(pointFeatures[0] == "return_number"):
+            data = np.concatenate((XYZ,rNumber),axis=2)
+        elif(pointFeatures[0] == "intensity"):
+            data = np.concatenate((XYZ,intens),axis=2)
+        else:
+            print("Invalid pointFeatures.")
+            assert(0)
+    elif(len(pointFeatures)==2):
+        data = np.concatenate((XYZ,intens,rNumber),axis=2)
+    else:
+        print("pointFeatures had an invalid size.")
+        assert(0)
+
+    f.close()
+    return (data, label, seg)
+
 
 def load_h5_analys_data(filename):
     f = h5py.File(filename,'r')
