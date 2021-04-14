@@ -25,10 +25,11 @@ import analysis_ALS
 
 # Specifies which point features that will be used during training.
 # Leave empty for just XYZ. Write "return_number" to add number of returns and "intensity" to add intensity.
+
 pointFeatures = ["intensity"] #["intensity","return_number"] #
 
-
 logPath = '../TrainedModels/step_2_B60_P4096_E400/' #step_1_xyz+intensity_4F/' #step_1_xyz+RN_4F/' #step_1_xyz_3F/'
+
 
 # Defines parameters for PointNet.
 parser = argparse.ArgumentParser()
@@ -123,6 +124,7 @@ def evaluate(num_votes):
     eval_one_epoch(sess, ops, num_votes)
 
     analysis_ALS.analys_ALS(RES_FILES,logPath)
+
     
 
 # Function to evaluate one epoch.

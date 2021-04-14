@@ -4,6 +4,7 @@ import numpy as np
 
 import accessDataFiles
 import analys_functions
+
 import filterFunctions
 
 def analys_ALS(filename,logpath, useFilter = 0,includeImage = 0):
@@ -36,6 +37,7 @@ def analys_ALS(filename,logpath, useFilter = 0,includeImage = 0):
 
     analys_functions.learningCurvePlot( logpath+'log_train.txt','learning_curve.png')
 
+
     ##################### Analysis For Block Classification #######################
 
     # Create a text file that contains the coordinates that have been missclassificated.
@@ -57,6 +59,7 @@ def analys_ALS(filename,logpath, useFilter = 0,includeImage = 0):
     print('Recall value for blocks: '+str(recall_Class))
 
 
+
     ###############################################################################
 
     # Needs to be tested.
@@ -74,12 +77,14 @@ def analys_ALS(filename,logpath, useFilter = 0,includeImage = 0):
 
         #cohenScore_Seg = analys_functions.cohen_kappa_analys(label_seg_total,pred_label_seg_total)
 
+
         analys_functions.confusion_matrix_plot(label_seg_total,pred_label_seg_total,"ConfusionMatrix_Segmentaion.png")
 
         # Print Youden's J statistics and Cohen's kappa.
         print('Youdens index value for points: '+str(youdenScore_Seg))
         print('Precision value for points: '+str(precision_seg))
         print('Recall value for points: '+str(recall_seg))
+
 
 
         # Create images
@@ -95,6 +100,7 @@ def analys_ALS(filename,logpath, useFilter = 0,includeImage = 0):
 
 
 
+
 def main():
     #analys_ALS(["../Test/TestResults/step_2_B60_P4096/400Epochs/Karlstad/Result/Result_B60_P4096_Karlstad_Test_Set.h5"],"../TrainedModels/step_2_B60_P4096_E400/")
 
@@ -104,6 +110,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 

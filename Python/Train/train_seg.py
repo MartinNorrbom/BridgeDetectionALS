@@ -26,7 +26,9 @@ import accessDataFiles
 
 # Specifies which point features that will be used during training.
 # Leave empty for just XYZ. Write "return_number" to add number of returns and "intensity" to add intensity.
-pointFeatures = ["return_number", "intensity"] #["intensity"] #
+
+pointFeatures = ["intensity"] #["return_number", "intensity"] #
+
 
 
 # Defines parameters for PointNet++
@@ -99,6 +101,7 @@ TRAIN_FILES = accessDataFiles.getDataFiles( \
 
 TEST_FILES = accessDataFiles.getDataFiles(\
     os.path.join(BASE_DIR, '../data/Lantmateriet/validation_files.txt'))
+
 
 RES_FILES = []
 
@@ -297,8 +300,10 @@ def eval_one_epoch(sess, ops, test_writer):
     for fn in range(len(TEST_FILES)):
 
         # Load the current evaluation file.
-        current_data, current_label, current_label_seg = accessDataFiles.load_h5_F5(TEST_FILES[fn],pointFeatures)
-        print(str(TEST_FILES[fn]))
+        current_data, current_label, current_label_seg = accessDataFiles.load_h5_F5(validation_files[fn],pointFeatures)
+
+        print(str(validation_files[fn]))
+
         # Get points for the input layer.
         current_data = current_data[:,0:NUM_POINT,:]
         current_label_seg = np.squeeze(current_label_seg)

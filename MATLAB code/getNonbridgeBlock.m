@@ -1,7 +1,7 @@
 function [blockCoord,intensityBlock,returnNumberBlock,pointLabel,blockLabel,blockGeoCoord] = ...
     getNonbridgeBlock(ptCloud,pointAttributes,class,tileBlockPointNumber,gridSize)
 %  This function is used to get the tile block without bridge points from the
-%  laz file.   
+%  laz file.
 %   Detailed explanation goes here:
 %   Input: 
 %       ptCloud: point cloud data

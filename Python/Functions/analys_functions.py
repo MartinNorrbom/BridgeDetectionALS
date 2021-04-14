@@ -14,7 +14,6 @@ from sklearn.cluster import DBSCAN
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
 
-
 # ROC,Confusion matrix, Cohens kappa, Yoden's index
 import sklearn.metrics as metrics
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay 
@@ -90,8 +89,6 @@ def point_cloud_3D_view_plot(PointData,label_seg,pred_lab,block_num):
     v.color_map('jet', scale=[0, 1]) # define the color scale
     v.set(point_size=0.35) # define the point size
 
-    
-
     lengthC0 = np.max(PointData[:,0]) - np.min(PointData[:,0])
 
     lengthC1 = np.max(PointData[:,1]) - np.min(PointData[:,1])
@@ -99,6 +96,7 @@ def point_cloud_3D_view_plot(PointData,label_seg,pred_lab,block_num):
     radius = np.sqrt( lengthC0**2 + lengthC1**2 )*1.2
 
     v.set(r=radius) # define the radiun of the image view
+
     time.sleep(2)
     # Capture images with 3 angels
     for i in range(num_image):
@@ -176,11 +174,12 @@ def cohen_kappa_analys(y_actural_label,y_pred_label):
 
 
 def analys_score_methods(y_actural_label,y_pred_label):
+
     '''Function generates a Youden's index value J'''
     tn, fp, fn, tp = confusion_matrix(y_actural_label,y_pred_label).ravel()
     #tn, fp, fn, tp = confusion_matrix(y_actural_label,y_pred_label)
     print("TN:",tn,"TP:",tp,"FN:",fn,"FP:",fp)
-    
+
     # Calculate the Yodens Index value J:
     if (tp+fn) == 0:
         J = 0
@@ -199,6 +198,7 @@ def analys_score_methods(y_actural_label,y_pred_label):
         recall_value = tp/(tp + fn)
         
     return J,precision_value,recall_value
+
 
     
 def confusion_matrix_plot(y_actural_label,y_pred_label,filename):   
@@ -238,9 +238,6 @@ def confusion_matrix_plot(y_actural_label,y_pred_label,filename):
     # plt.show()
     plt.savefig(filename, format='png')
     plt.close()
-
-
-
 
 
 def learningCurvePlot(filename,savename):
@@ -356,4 +353,3 @@ def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord,thresH =
     # v.set(point_size=0.35) # define the point size
 
     return nrBridgesFound,nrBridges,(tileBlocksWholeBridges,labelBridges,predBridges)
-    
