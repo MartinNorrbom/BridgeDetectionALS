@@ -25,7 +25,10 @@ import analysis_ALS
 
 # Specifies which point features that will be used during training.
 # Leave empty for just XYZ. Write "return_number" to add number of returns and "intensity" to add intensity.
-pointFeatures = []#["return_number", "intensity"]
+
+pointFeatures = ["intensity"] #["intensity","return_number"] #
+
+logPath = '../TrainedModels/step_2_B60_P4096_E400/' #step_1_xyz+intensity_4F/' #step_1_xyz+RN_4F/' #step_1_xyz_3F/'
 
 
 # Defines parameters for PointNet.
@@ -33,8 +36,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 #parser.add_argument('--model', default='pointnet2_part_seg', help='Model name [default: pointnet2_part_seg]')
 parser.add_argument('--batch_size', type=int, default=2, help='Batch Size during training [default: 1]')
-parser.add_argument('--num_point', type=int, default=1024, help='Point Number [256/512/1024/2048] [default: 1024]')
-parser.add_argument('--model_path', default='../TrainedModels/log/model.ckpt', help='model checkpoint file path [default: log/model.ckpt]')
+parser.add_argument('--num_point', type=int, default=4096, help='Point Number [256/512/1024/2048] [default: 1024]')
+parser.add_argument('--model_path', default=logPath+'model.ckpt', help='model checkpoint file path [default: log/model.ckpt]')
 parser.add_argument('--res_dir', default='Result', help='Result folder path [dump]')
 parser.add_argument('--visu', action='store_true', help='Whether to dump image for error case [default: False]')
 
@@ -120,7 +123,8 @@ def evaluate(num_votes):
     print("Evaluate one epoch.")
     eval_one_epoch(sess, ops, num_votes)
 
-    analysis_ALS.analys_ALS(RES_FILES)
+    analysis_ALS.analys_ALS(RES_FILES,logPath)
+
     
 
 # Function to evaluate one epoch.

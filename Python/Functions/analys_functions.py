@@ -9,6 +9,11 @@ import shutil
 from PIL import Image
 import time
 
+from sklearn.cluster import DBSCAN
+
+import matplotlib.pyplot as plt
+plt.style.use('seaborn-whitegrid')
+
 # ROC,Confusion matrix, Cohens kappa, Yoden's index
 import sklearn.metrics as metrics
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay 
@@ -83,7 +88,15 @@ def point_cloud_3D_view_plot(PointData,label_seg,pred_lab,block_num):
     v = pptk.viewer(PointData,color_label) 
     v.color_map('jet', scale=[0, 1]) # define the color scale
     v.set(point_size=0.35) # define the point size
-    v.set(r=100) # define the radiun of the image view
+
+    lengthC0 = np.max(PointData[:,0]) - np.min(PointData[:,0])
+
+    lengthC1 = np.max(PointData[:,1]) - np.min(PointData[:,1])
+
+    radius = np.sqrt( lengthC0**2 + lengthC1**2 )*1.2
+
+    v.set(r=radius) # define the radiun of the image view
+
     time.sleep(2)
     # Capture images with 3 angels
     for i in range(num_image):
@@ -160,7 +173,8 @@ def cohen_kappa_analys(y_actural_label,y_pred_label):
     return k
 
 
-def youdens_index_analys(y_actural_label,y_pred_label):
+def analys_score_methods(y_actural_label,y_pred_label):
+
     '''Function generates a Youden's index value J'''
     tn, fp, fn, tp = confusion_matrix(y_actural_label,y_pred_label).ravel()
     #tn, fp, fn, tp = confusion_matrix(y_actural_label,y_pred_label)
@@ -169,13 +183,22 @@ def youdens_index_analys(y_actural_label,y_pred_label):
     # Calculate the Yodens Index value J:
     if (tp+fn) == 0:
         J = 0
-        print("TP and FN are zero, Youden's value is not working.")   
+        precision_value = 0
+        precision_value = tp/(tp + fp)
+        recall_value = 0
+        print("No bridge points, Recall is zero and Youden's value is not working.")   
     elif (tn + fp) == 0:
         J = 0
-        print("TN and FP are zero, Youden's value is not working.")
+        precision_value = tp/(tp + fp)
+        recall_value = tp/(tp + fn)
+        print("Only bridge points, Youden's value is not working.")
     else:
         J = (tp/(tp + fn)) + (tn/(tn + fp)) - 1
-    return J
+        precision_value = tp/(tp + fp)
+        recall_value = tp/(tp + fn)
+        
+    return J,precision_value,recall_value
+
 
     
 def confusion_matrix_plot(y_actural_label,y_pred_label,filename):   
@@ -215,3 +238,118 @@ def confusion_matrix_plot(y_actural_label,y_pred_label,filename):
     # plt.show()
     plt.savefig(filename, format='png')
     plt.close()
+
+
+def learningCurvePlot(filename,savename):
+    file1 = open(filename, 'r')
+    Lines = file1.readlines()
+    file1.close()
+
+    validationAccuracy = []
+
+    for i in range(len(Lines)-2):
+        if(Lines[i].find("EVALUATION") >= 0):
+
+            num = Lines[i+2].replace('eval accuracy: ','')
+
+            validationAccuracy.append( np.double( num ) )
+
+    plt.plot(validationAccuracy)
+    plt.savefig(savename)
+
+
+
+
+
+
+def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord,thresH = 0.5):
+
+    # Get dimensions of the block data.
+    dims = coordinates.shape
+
+    # Check if several tile blocks is included.
+    if(len(dims) == 3 ):
+
+        # Get number of blocks and points per block.
+        nrBlocks = dims[0]
+        nrPoints = dims[1]
+
+        # Add the center coordinate to all the blocks to get orginal coordinates.
+        for i in range(nrBlocks):
+            coordinates[i,:,0:2] = coordinates[i,:,0:2] + np.flip( np.array([geo_coord[i,:],]*nrPoints) )
+
+        # Merge the data to one dimension less.
+        mergedCoord = coordinates.reshape(nrBlocks*nrPoints,3)
+        mergedlabel_seg = label_seg.reshape(-1)
+        mergedpred_label_seg = pred_label_seg.reshape(-1)
+
+    elif(len(dims) == 2):
+        # If there is only one tile block and the dimension is squeezed.
+        nrBlock = 1
+        mergedCoord = np.copy(coordinates)
+        mergedlabel_seg = np.copy(label_seg)
+        mergedpred_label_seg = np.copy(pred_label_seg)
+
+    else:
+        print("Wrong number of dimensions in 'coordinates'")
+        assert(0)
+
+    # Use DBSCAN to cluster labeled bridge points.
+    clustering = DBSCAN(eps=4, min_samples=1).fit(mergedCoord[mergedlabel_seg == 1,0:2])
+
+    # Create indecies for all points, zeros represent non bridge. 
+    # Evey other is indicies for each bridge in the data.
+    bridgeIndex = np.copy(mergedlabel_seg)
+    bridgeIndex[mergedlabel_seg == 1] = clustering.labels_+ [1,]*len(clustering.labels_)
+
+    # Debug tool
+    # v = pptk.viewer(mergedCoord[mergedlabel_seg == 1,:], clustering.labels_)
+    # v.set(point_size=0.35) # define the point size
+
+
+    # Get number of labelled bridges.
+    nrBridges = len(np.unique(clustering.labels_))
+    # Count the number of bridges found.
+    nrBridgesFound = 0
+
+    tileBlocksWholeBridges = []
+    predBridges = []
+    labelBridges = []
+    
+    limitMargin = 20
+
+    # Loop through all the bridges.
+    for i in range(1,nrBridges):
+
+        # Get the ratio of points found in the bridge.
+        percentFound = np.sum(mergedpred_label_seg[bridgeIndex == i])/np.sum(bridgeIndex == i)
+
+        # If the ratio of bridge points found is higher than the threshold, 
+        # the bridge is labelled as found.
+        if( thresH <= percentFound ):
+            nrBridgesFound = nrBridgesFound + 1
+
+        # Append one tile block over the bridge.
+
+        # Max and min coordinate 0
+        maxC0 = np.max( mergedCoord[bridgeIndex == i,0] ) + limitMargin
+        minC0 = np.min( mergedCoord[bridgeIndex == i,0] ) - limitMargin
+
+        # Max and min coordinate 1
+        maxC1 = np.max( mergedCoord[bridgeIndex == i,1] ) + limitMargin
+        minC1 = np.min( mergedCoord[bridgeIndex == i,1] ) - limitMargin
+
+        # Get indecies of points within the limits.
+        tempBridgeIndex = (minC0 < mergedCoord[:,0]) & (mergedCoord[:,0] < maxC0) & (minC1 < mergedCoord[:,1]) & (mergedCoord[:,1] < maxC1)
+
+        # Save tileblock over the current bridge
+        tileBlocksWholeBridges.append( mergedCoord[tempBridgeIndex,:] )
+
+        labelBridges.append( mergedlabel_seg[tempBridgeIndex] )
+        predBridges.append( mergedpred_label_seg[tempBridgeIndex] )
+
+    # Debug
+    # v = pptk.viewer( tileBlocksWholeBridges[2] )
+    # v.set(point_size=0.35) # define the point size
+
+    return nrBridgesFound,nrBridges,(tileBlocksWholeBridges,labelBridges,predBridges)

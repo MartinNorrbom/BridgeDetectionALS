@@ -26,7 +26,9 @@ import accessDataFiles
 
 # Specifies which point features that will be used during training.
 # Leave empty for just XYZ. Write "return_number" to add number of returns and "intensity" to add intensity.
-pointFeatures = []#["return_number", "intensity"]
+
+pointFeatures = ["intensity"] #["return_number", "intensity"] #
+
 
 
 # Defines parameters for PointNet++
@@ -34,7 +36,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--log_dir', default='../TrainedModels/log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=1024, help='Point Number [default: 2048]')
-parser.add_argument('--max_epoch', type=int, default=1, help='Epoch to run [default: 201]')
+parser.add_argument('--max_epoch', type=int, default=100, help='Epoch to run [default: 201]')
 parser.add_argument('--batch_size', type=int, default=2, help='Batch Size during training [default: 32]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
@@ -95,10 +97,11 @@ NUM_CLASSES = 2
 
 # Import data for train and test files:
 TRAIN_FILES = accessDataFiles.getDataFiles( \
-    os.path.join(BASE_DIR, '../data/Lantmateriet/test_files.txt'))
+    os.path.join(BASE_DIR, '../data/Lantmateriet/train_files.txt'))
 
 TEST_FILES = accessDataFiles.getDataFiles(\
-    os.path.join(BASE_DIR, '../data/Lantmateriet/test_files.txt'))
+    os.path.join(BASE_DIR, '../data/Lantmateriet/validation_files.txt'))
+
 
 RES_FILES = []
 
@@ -297,7 +300,10 @@ def eval_one_epoch(sess, ops, test_writer):
     for fn in range(len(TEST_FILES)):
 
         # Load the current evaluation file.
-        current_data, current_label, current_label_seg = accessDataFiles.load_h5_F5(TEST_FILES[fn],pointFeatures)
+        current_data, current_label, current_label_seg = accessDataFiles.load_h5_F5(validation_files[fn],pointFeatures)
+
+        print(str(validation_files[fn]))
+
         # Get points for the input layer.
         current_data = current_data[:,0:NUM_POINT,:]
         current_label_seg = np.squeeze(current_label_seg)
