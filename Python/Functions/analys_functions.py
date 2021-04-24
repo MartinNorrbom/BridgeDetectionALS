@@ -14,6 +14,7 @@ from sklearn.cluster import DBSCAN
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
 
+
 # ROC,Confusion matrix, Cohens kappa, Yoden's index
 import sklearn.metrics as metrics
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay 
@@ -89,6 +90,8 @@ def point_cloud_3D_view_plot(PointData,label_seg,pred_lab,block_num):
     v.color_map('jet', scale=[0, 1]) # define the color scale
     v.set(point_size=0.35) # define the point size
 
+    
+
     lengthC0 = np.max(PointData[:,0]) - np.min(PointData[:,0])
 
     lengthC1 = np.max(PointData[:,1]) - np.min(PointData[:,1])
@@ -96,7 +99,6 @@ def point_cloud_3D_view_plot(PointData,label_seg,pred_lab,block_num):
     radius = np.sqrt( lengthC0**2 + lengthC1**2 )*1.2
 
     v.set(r=radius) # define the radiun of the image view
-
     time.sleep(2)
     # Capture images with 3 angels
     for i in range(num_image):
@@ -174,12 +176,11 @@ def cohen_kappa_analys(y_actural_label,y_pred_label):
 
 
 def analys_score_methods(y_actural_label,y_pred_label):
-
     '''Function generates a Youden's index value J'''
     tn, fp, fn, tp = confusion_matrix(y_actural_label,y_pred_label).ravel()
     #tn, fp, fn, tp = confusion_matrix(y_actural_label,y_pred_label)
     print("TN:",tn,"TP:",tp,"FN:",fn,"FP:",fp)
-
+    
     # Calculate the Yodens Index value J:
     if (tp+fn) == 0:
         J = 0
@@ -198,7 +199,6 @@ def analys_score_methods(y_actural_label,y_pred_label):
         recall_value = tp/(tp + fn)
         
     return J,precision_value,recall_value
-
 
     
 def confusion_matrix_plot(y_actural_label,y_pred_label,filename):   
@@ -240,6 +240,9 @@ def confusion_matrix_plot(y_actural_label,y_pred_label,filename):
     plt.close()
 
 
+
+
+
 def learningCurvePlot(filename,savename):
     file1 = open(filename, 'r')
     Lines = file1.readlines()
@@ -256,7 +259,7 @@ def learningCurvePlot(filename,savename):
 
     plt.plot(validationAccuracy)
     plt.savefig(savename)
-
+    plt.close()
 
 
 
@@ -264,9 +267,12 @@ def learningCurvePlot(filename,savename):
 
 def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord,thresH = 0.5):
 
+
     # Get dimensions of the block data.
     dims = coordinates.shape
 
+    if( np.sum(label_seg) == 0 ):
+        return 0,0,[]
     # Check if several tile blocks is included.
     if(len(dims) == 3 ):
 
@@ -276,7 +282,13 @@ def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord,thresH =
 
         # Add the center coordinate to all the blocks to get orginal coordinates.
         for i in range(nrBlocks):
-            coordinates[i,:,0:2] = coordinates[i,:,0:2] + np.flip( np.array([geo_coord[i,:],]*nrPoints) )
+
+            if(geo_coord.shape[1] == 3):
+                addCoord = [np.array([ geo_coord[i,1], geo_coord[i,0], geo_coord[i,2] ]),]*nrPoints
+            else:
+                addCoord = np.flip( np.array([geo_coord[i,:],]*nrPoints) )
+
+            coordinates[i,:,0:geo_coord.shape[1]] = coordinates[i,:,0:geo_coord.shape[1]] + addCoord
 
         # Merge the data to one dimension less.
         mergedCoord = coordinates.reshape(nrBlocks*nrPoints,3)
@@ -294,8 +306,14 @@ def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord,thresH =
         print("Wrong number of dimensions in 'coordinates'")
         assert(0)
 
+    # v = pptk.viewer(mergedCoord)
+    # v.set(point_size=0.35) # define the point size
+
     # Use DBSCAN to cluster labeled bridge points.
-    clustering = DBSCAN(eps=4, min_samples=1).fit(mergedCoord[mergedlabel_seg == 1,0:2])
+    if(geo_coord.shape[1] == 3):
+        clustering = DBSCAN(eps=4, min_samples=1).fit(mergedCoord[mergedlabel_seg == 1,:])
+    else:
+        clustering = DBSCAN(eps=4, min_samples=1).fit(mergedCoord[mergedlabel_seg == 1,0:2])
 
     # Create indecies for all points, zeros represent non bridge. 
     # Evey other is indicies for each bridge in the data.
@@ -318,8 +336,8 @@ def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord,thresH =
     
     limitMargin = 20
 
-    # Loop through all the bridges.
-    for i in range(1,nrBridges):
+    # Loop through all the bridges, bridge index is from 1 to nrBridges.
+    for i in range(1,nrBridges+1):
 
         # Get the ratio of points found in the bridge.
         percentFound = np.sum(mergedpred_label_seg[bridgeIndex == i])/np.sum(bridgeIndex == i)
@@ -353,3 +371,25 @@ def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord,thresH =
     # v.set(point_size=0.35) # define the point size
 
     return nrBridgesFound,nrBridges,(tileBlocksWholeBridges,labelBridges,predBridges)
+    
+
+
+def bridgeHistogram(labelBridges,predBridges,savenameHist,bins = 10):
+
+    nrOfBridges = len(labelBridges)
+
+    bridgeAccuracy = np.zeros(nrOfBridges)
+
+    for i in range(nrOfBridges):
+
+        tempCorrectP = sum( (labelBridges[i] == predBridges[i]) & (labelBridges[i] == 1) )
+
+        bridgeAccuracy[i] = 100*tempCorrectP/np.sum(labelBridges[i]==1)
+
+    if(len(savenameHist) != 0):
+        plt.hist(bridgeAccuracy,bins)
+        plt.savefig(savenameHist)
+        plt.close()
+
+    return bridgeAccuracy
+

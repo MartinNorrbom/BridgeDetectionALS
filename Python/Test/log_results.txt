@@ -1,0 +1,10 @@
+TestOverlap/Result_B70_P8192_G4_Karlstad_TestSet_6.h5
+Number of bridges found: 6 of 9
+Youdens index value for points: 0.8210610748128491
+Precision value for points: 0.5901416650494857
+Recall value for points: 0.8213369345037137
+Total test area. 
+Number of bridges found: 6 of 9
+Youdens index value for points: 0.8210610748128491
+Precision value for points: 0.5901416650494857
+Recall value for points: 0.8213369345037137

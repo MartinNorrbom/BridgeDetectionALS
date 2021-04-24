@@ -26,7 +26,7 @@ Generated Data
 *.png
 
 *.zip
-
+*coordinates.txt
 
 # Windows default autosave extension
 *.asv

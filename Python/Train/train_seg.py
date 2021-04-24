@@ -216,12 +216,7 @@ def train():
 
 def train_one_epoch(sess, ops, train_writer):
     """ ops: dict mapping from string to tf ops """
-    is_training = True   
-
-    # Shuffle train samples
-    # train_idxs = np.arange(0, len(TRAIN_DATASET))
-    # np.random.shuffle(train_idxs)
-    # num_batches = len(TRAIN_DATASET)/BATCH_SIZE
+    is_training = True
     
     log_string(str(datetime.now()))
 
@@ -229,14 +224,17 @@ def train_one_epoch(sess, ops, train_writer):
     total_seen = 0
     loss_sum = 0
 
-
+    # Shuffle train files.
+    # Randomize the order of reading the files in each epoch.
+    train_file_idxs = np.arange(0, len(TRAIN_FILES))
+    np.random.shuffle(train_file_idxs)
 
     # Loop through all the test files.
     for fn in range(len(TRAIN_FILES)):
 
 
         # Load the current training file.
-        current_data, current_label, current_label_seg = accessDataFiles.load_h5_F5(TRAIN_FILES[fn],pointFeatures)
+        current_data, current_label, current_label_seg = accessDataFiles.load_h5_F5(TRAIN_FILES[train_file_idxs[fn]],pointFeatures,1)
         print(str(TRAIN_FILES[fn]))
 
         # Get points for the input layer.

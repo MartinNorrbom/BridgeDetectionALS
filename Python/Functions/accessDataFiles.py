@@ -6,6 +6,7 @@ import shutil
 import ntpath
 import time
 
+import training_functions
 
 def getDataFiles(list_filename):
     return [line.rstrip() for line in open(list_filename)]
@@ -34,13 +35,26 @@ def loadDataFile_with_seg(filename):
     return load_h5_data_label_seg(filename)
 
 
-def load_h5_F5(filename,pointFeatures):
+def load_h5_F5(filename,pointFeatures,shuffleRotate = 0):
     f = h5py.File(filename,'r')
     XYZ = f['data'][:]
     intens = f['intensity'][:]
     rNumber = f['return_number'][:]
     label = f['label'][:]
     seg = f['label_seg'][:]
+
+
+    if(shuffleRotate == 1):
+        # Rotate the XYZ coordinates.
+        for i in range(XYZ.shape[0]):
+            XYZ[i,:,:] = training_functions.rotate_point_cloud_z(XYZ[i,:,:])
+
+        # Shuffle the data.
+        XYZ,label,idx = training_functions.shuffle_data(XYZ, label)
+        intens = np.copy(intens[idx,:])
+        rNumber = np.copy(rNumber[idx,:])
+        seg = np.copy(seg[idx,:])
+        
 
     # Return the specified point features.
     if(len(pointFeatures)==0):
@@ -78,13 +92,18 @@ def load_h5_analys_data(filename):
                 typesAvailable[i]=1
                 break
     
-    if sum(typesAvailable[0:4]) < 4:
+    if sum(typesAvailable[0:3]) < 3:
         print("The h5 file is not supported, at least one key of the types("+str(listOfTypes[0:4])+")")
     else:
         data = f[listOfTypes[0]][:]
         label = f[listOfTypes[1]][:]
         seg = f[listOfTypes[2]][:]
+
+
+    if typesAvailable[3]:
         pred_label = f[listOfTypes[3]][:]
+    else:
+        pred_label = []
 
     if typesAvailable[4]:
         pred_label_seg = f[listOfTypes[4]][:]
