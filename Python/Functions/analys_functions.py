@@ -265,7 +265,7 @@ def learningCurvePlot(filename,savename):
 
 
 
-def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord,thresH = 0.5):
+def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord = [],thresH = 0.5):
 
 
     # Get dimensions of the block data.
@@ -274,7 +274,7 @@ def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord,thresH =
     if( np.sum(label_seg) == 0 ):
         return 0,0,[]
     # Check if several tile blocks is included.
-    if(len(dims) == 3 ):
+    if(len(dims) == 3 and len(geo_coord) != 0 ):
 
         # Get number of blocks and points per block.
         nrBlocks = dims[0]

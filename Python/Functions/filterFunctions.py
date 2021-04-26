@@ -221,9 +221,8 @@ def voting_overlapping(coordinates,pred_label_seg, geo_coord, label_seg = [] ):
         # If majority votes is bridges set prediction label to bridge.
         uPred[ np.where( voteRes > 0.5 ) ] = 1
 
-        # FIX EQUAL VOTING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        indexEqualVotes = np.squeeze( np.where( voteRes == 0.5 ) )
+        # Indicies for equal votes.
+        indexEqualVotes = np.squeeze( np.where( voteRes == 0.5 ), axis=0 )
 
         print("Number of equal votes: ")
         print(indexEqualVotes.shape)
