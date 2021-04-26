@@ -100,7 +100,7 @@ def voting_overlapping(coordinates,pred_label_seg, geo_coord, label_seg = [] ):
             tempCoord,index_to_use,index,uCounts = np.unique(coordinates[i,:,:],return_index=1,return_inverse=1,return_counts=1,axis=0)
 
             # If the tile block has been interpolated, make intern voting.
-            if( len(tempCoord) < nrPoints ):
+            if( len(index_to_use) < nrPoints ):
 
                 # Get number of unique points.
                 nrRows = np.max(index) + 1
@@ -175,6 +175,12 @@ def voting_overlapping(coordinates,pred_label_seg, geo_coord, label_seg = [] ):
 
     endU = time.time()
     print("Time unique: ")
+
+    print("Total number of coordinates.")
+    print(allCoord.shape[0])
+    print("Number of unique coordinates.")
+    print(uAllCoord.shape[0])
+
     print(endU - startU)
 
     startVO = time.time()
@@ -233,14 +239,14 @@ def voting_overlapping(coordinates,pred_label_seg, geo_coord, label_seg = [] ):
             for i in indexEqualVotes:
 
                 # Get index of voting points.
-                tempIndex = np.where(indexVoteCount[i,:] > -1)
+                tempIndex = np.copy(indexVoteCount[i, indexVoteCount[i,:] > -1 ] )
 
                 # Get geographical coordinates of the voting tile blocks.
                 tempGeoCoord = np.copy( allPointGeoCoord[tempIndex,:] )
 
                 # Get distance between point and center of tile blocks.
                 tempdist = np.sum( np.power( tempGeoCoord - uAllCoord[i,:],2 ) ,axis=1)
-                
+
                 # Set the prediction from closest tile block.
                 uPred[i] = np.copy( voteCount[i, np.argmin(tempdist)] )
 
@@ -252,11 +258,6 @@ def voting_overlapping(coordinates,pred_label_seg, geo_coord, label_seg = [] ):
     endVO = time.time()
     print("Time voting overlap: ")
     print(endVO - startVO)
-
-    print("Total number of coordinates.")
-    print(allCoord.shape[0])
-    print("Number of unique coordinates.")
-    print(uAllCoord.shape[0])
 
 
 

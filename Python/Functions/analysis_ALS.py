@@ -40,7 +40,7 @@ def analys_ALS(filename,logpath, useFilter = 0,includeImage = 0):
 
         # Create a text file that contains the coordinates that have been missclassificated.
         if( len(geo_coord) > 0 ):
-            analys_functions.saveCoordinatesText("coordinates.txt",geo_coord,label_block,pred_label)
+            analys_functions.saveCoordinatesText("coordinates"+str(cfile)+".txt",geo_coord,label_block,pred_label)
 
         ##################### Filters #######################
 
@@ -116,7 +116,11 @@ def analys_ALS(filename,logpath, useFilter = 0,includeImage = 0):
     tot_pred = np.concatenate(list_pred_seg)
     tot_label = np.concatenate(list_label_seg)
 
-    
+
+    youdenScore_Seg, precision_seg, recall_seg = analys_functions.analys_score_methods(tot_label,tot_pred)
+
+    analys_functions.confusion_matrix_plot(label_seg_total,pred_label_seg_total,"ConfusionMatrix_Segmentaion_Total.png")
+
     result_log.write( "Total test area. \n")
     result_log.write("Number of bridges found: " + str(nrBridgesFound) + " of " + str(nrBridges) + "\n")
 
@@ -124,6 +128,7 @@ def analys_ALS(filename,logpath, useFilter = 0,includeImage = 0):
     result_log.write('Precision value for points: '+str(precision_seg) + "\n")
     result_log.write('Recall value for points: '+str(recall_seg) + "\n")
     
+
     
     tot_bridge_info = np.concatenate(list_bridge_info)
 
@@ -149,7 +154,20 @@ def main():
 
     #analys_ALS(["../Test/TestResults/result_step_3_B70_P8192_6m12m/OnlyBridge/Result_B70_P8192_OnlyBridge_Test_Set.h5"],"../TrainedModels/")
 
-    analys_ALS(["TestOverlap/Result_B70_P8192_G4_Karlstad_TestSet_6.h5"],"../TrainedModels/",useFilter=1,includeImage=0)
+    # analys_ALS(["Results\Result_00\Result_B70_P8192_G4_TestSet_Karlstad.h5"],"..\\TrainedModels\\20210401_B30_P1024_5F\\",useFilter=1,includeImage=0)
+    
+    fileList = [\
+        "Results\Result_00\Result_B70_P8192_G4_TestSet_Karlstad.h5",\
+        "Results\Result_00\Result_B70_P8192_G4_TestSet_Halsingborg.h5",\
+        "Results\Result_00\Result_B70_P8192_G4_TestSet_Lund.h5",\
+        "Results\Result_00\Result_B70_P8192_G4_TestSet_Norrkoping.h5",\
+        "Results\Result_00\Result_B70_P8192_G4_TestSet_Nykoping.h5",\
+        "Results\Result_00\Result_B70_P8192_G4_TestSet_Trollhattan.h5",\
+        "Results\Result_00\Result_B70_P8192_G4_TestSet_Umea.h5",\
+    ]
+
+    analys_ALS([fileList[3]],"..\\TrainedModels\\20210401_B30_P1024_5F\\",useFilter=1,includeImage=1)
+
 
 
 if __name__ == "__main__":
