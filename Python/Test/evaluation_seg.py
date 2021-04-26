@@ -28,15 +28,15 @@ import analysis_ALS
 
 pointFeatures = ["intensity"] #["intensity","return_number"] #
 
-logPath = '../TrainedModels/step_2_B60_P4096_E400/' #step_1_xyz+intensity_4F/' #step_1_xyz+RN_4F/' #step_1_xyz_3F/'
+logPath = '../TrainedModels/step_2_B70_P8192_E400/' #step_1_xyz+intensity_4F/' #step_1_xyz+RN_4F/' #step_1_xyz_3F/'
 
 
 # Defines parameters for PointNet.
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 #parser.add_argument('--model', default='pointnet2_part_seg', help='Model name [default: pointnet2_part_seg]')
-parser.add_argument('--batch_size', type=int, default=2, help='Batch Size during training [default: 1]')
-parser.add_argument('--num_point', type=int, default=4096, help='Point Number [256/512/1024/2048] [default: 1024]')
+parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 1]')
+parser.add_argument('--num_point', type=int, default=8192, help='Point Number [256/512/1024/2048] [default: 1024]')
 parser.add_argument('--model_path', default=logPath+'model.ckpt', help='model checkpoint file path [default: log/model.ckpt]')
 parser.add_argument('--res_dir', default='Result', help='Result folder path [dump]')
 parser.add_argument('--visu', action='store_true', help='Whether to dump image for error case [default: False]')
@@ -77,7 +77,7 @@ NUM_CLASSES = 2
 #     os.path.join(BASE_DIR, '../data/Lantmateriet/train_files.txt'))
 
 TEST_FILES = accessDataFiles.getDataFiles(\
-    os.path.join(BASE_DIR, '../data/Lantmateriet/test_files.txt'))
+    os.path.join(BASE_DIR, '../data/Lantmateriet/test_files_mixed.txt'))
 
 RES_FILES = []
 
