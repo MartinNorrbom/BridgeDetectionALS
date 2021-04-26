@@ -378,7 +378,7 @@ def bridgeHistogram(labelBridges,predBridges,savenameHist,bins = 10):
 
     nrOfBridges = len(labelBridges)
 
-    bridgeAccuracy = np.zeros(nrOfBridges)
+    bridgeAccuracy = np.zeros(nrOfBridges,dtype=np.int64)
 
     for i in range(nrOfBridges):
 
