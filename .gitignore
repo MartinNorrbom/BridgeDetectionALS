@@ -20,6 +20,8 @@ __pycache__/
 *TrainedModels/
 *TestResults/
 *data/
+*Results_Analysis/
+*FurtherAnalysis/
 
 Generated Data
 *.h5

@@ -23,14 +23,17 @@ from sklearn.metrics import cohen_kappa_score
 import matplotlib.pyplot as plt
 
 
-def saveCoordinatesText(fileName,geo_coord,label_block,pred_label):
+def saveCoordinatesText(fileName,geo_coord,label_block=[],pred_label=[]):
     ''' This function saves the coordinate of the missclassified tile blocks in a text file. '''
 
-    # Get indecies of missclassified tile blocks.
-    indexCoord = label_block != pred_label
+    if(len(label_block)!=0):
+        # Get indecies of missclassified tile blocks.
+        indexCoord = label_block != pred_label
 
-    # Get the coordinates over the missclassified tile blocks.
-    coordsToSave = geo_coord[indexCoord,:]
+        # Get the coordinates over the missclassified tile blocks.
+        coordsToSave = geo_coord[indexCoord,:]
+    else:
+        coordsToSave = np.copy(geo_coord)
 
     # Write the coordinates in the file.
     np.savetxt(fileName,coordsToSave,fmt='%0.02d')
@@ -181,6 +184,8 @@ def analys_score_methods(y_actural_label,y_pred_label):
     #tn, fp, fn, tp = confusion_matrix(y_actural_label,y_pred_label)
     print("TN:",tn,"TP:",tp,"FN:",fn,"FP:",fp)
     
+    OA = (tn+tp)/(tn+fp+fn+tp)
+
     # Calculate the Yodens Index value J:
     if (tp+fn) == 0:
         J = 0
@@ -198,7 +203,7 @@ def analys_score_methods(y_actural_label,y_pred_label):
         precision_value = tp/(tp + fp)
         recall_value = tp/(tp + fn)
         
-    return J,precision_value,recall_value
+    return J,precision_value,recall_value,OA
 
     
 def confusion_matrix_plot(y_actural_label,y_pred_label,filename):   
@@ -244,19 +249,25 @@ def confusion_matrix_plot(y_actural_label,y_pred_label,filename):
 
 
 def learningCurvePlot(filename,savename):
+
+    # Open the text file and read all rows.
     file1 = open(filename, 'r')
     Lines = file1.readlines()
     file1.close()
 
+    # Store the evaluation accuracy.
     validationAccuracy = []
 
+    # Loop through the list.
     for i in range(len(Lines)-2):
+        # Check if there is an evauation.
         if(Lines[i].find("EVALUATION") >= 0):
 
             num = Lines[i+2].replace('eval accuracy: ','')
 
             validationAccuracy.append( np.double( num ) )
 
+    # Save a plot of the learning curver.
     plt.plot(validationAccuracy)
     plt.savefig(savename)
     plt.close()
@@ -310,10 +321,8 @@ def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord = [],thr
     # v.set(point_size=0.35) # define the point size
 
     # Use DBSCAN to cluster labeled bridge points.
-    if(geo_coord.shape[1] == 3):
-        clustering = DBSCAN(eps=4, min_samples=1).fit(mergedCoord[mergedlabel_seg == 1,:])
-    else:
-        clustering = DBSCAN(eps=4, min_samples=1).fit(mergedCoord[mergedlabel_seg == 1,0:2])
+    clustering = DBSCAN(eps=4, min_samples=1).fit(mergedCoord[mergedlabel_seg == 1,:])
+
 
     # Create indecies for all points, zeros represent non bridge. 
     # Evey other is indicies for each bridge in the data.
@@ -376,20 +385,26 @@ def CountLabelledBridges(coordinates,label_seg,pred_label_seg,geo_coord = [],thr
 
 def bridgeHistogram(labelBridges,predBridges,savenameHist,bins = 10):
 
+    # Get number of bridges.
     nrOfBridges = len(labelBridges)
 
+    # Store the percentage of found points per bridge.
     bridgeAccuracy = np.zeros(nrOfBridges,dtype=np.int64)
 
+    # Loop through all bridges.
     for i in range(nrOfBridges):
-
+        # Get number of found points.
         tempCorrectP = sum( (labelBridges[i] == predBridges[i]) & (labelBridges[i] == 1) )
 
+        # Get the percentage of found bridge points per bridge.
         bridgeAccuracy[i] = 100*tempCorrectP/np.sum(labelBridges[i]==1)
 
+    # Save a histogram plot.
     if(len(savenameHist) != 0):
         plt.hist(bridgeAccuracy,bins)
         plt.savefig(savenameHist)
         plt.close()
 
     return bridgeAccuracy
+
 

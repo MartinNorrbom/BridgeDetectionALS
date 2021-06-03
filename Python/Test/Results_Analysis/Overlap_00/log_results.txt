@@ -1,0 +1,62 @@
+TestOverlap/Result_00/Result_B70_P8192_G4_TestSet_Karlstad.h5
+Number of bridges found: 36 of 49
+Overall accuracy: 0.9929648036707142
+Youdens index value for points: 0.7146910556116393
+Precision value for points: 0.2360203226892335
+Recall value for points: 0.7209919647981634
+
+
+TestOverlap/Result_00/Result_B70_P8192_G4_TestSet_Halsingborg.h5
+Number of bridges found: 46 of 74
+Overall accuracy: 0.991927825901239
+Youdens index value for points: 0.6971711217431926
+Precision value for points: 0.13112019592340474
+Recall value for points: 0.7047757249099531
+
+
+TestOverlap/Result_00/Result_B70_P8192_G4_TestSet_Lund.h5
+Number of bridges found: 45 of 72
+Overall accuracy: 0.9957021892664495
+Youdens index value for points: 0.6503913066402864
+Precision value for points: 0.10678853505079502
+Recall value for points: 0.6544368989562919
+
+
+TestOverlap/Result_00/Result_B70_P8192_G4_TestSet_Norrkoping.h5
+Number of bridges found: 42 of 61
+Overall accuracy: 0.9942493485080839
+Youdens index value for points: 0.6623149358894493
+Precision value for points: 0.15023838743660198
+Recall value for points: 0.6676077409391439
+
+
+TestOverlap/Result_00/Result_B70_P8192_G4_TestSet_Nykoping.h5
+Number of bridges found: 25 of 40
+Overall accuracy: 0.9961944729705946
+Youdens index value for points: 0.6323442495316733
+Precision value for points: 0.14023283496407857
+Recall value for points: 0.6358277511961723
+
+
+TestOverlap/Result_00/Result_B70_P8192_G4_TestSet_Trollhattan.h5
+Number of bridges found: 36 of 72
+Overall accuracy: 0.9970387527676107
+Youdens index value for points: 0.766974416525996
+Precision value for points: 0.2791478580835855
+Recall value for points: 0.7696316212545389
+
+
+TestOverlap/Result_00/Result_B70_P8192_G4_TestSet_Umea.h5
+Number of bridges found: 24 of 38
+Overall accuracy: 0.995621393739926
+Youdens index value for points: 0.7322237719190081
+Precision value for points: 0.4074290972977495
+Recall value for points: 0.7357467943270447
+
+
+Total test area. 
+Number of bridges found: 254 of 406
+Overall accuracy: 0.9949658873801245
+Youdens index value for points: 0.7009985899179665
+Precision value for points: 0.18888131934702537
+Recall value for points: 0.7055938519762884
