@@ -22,10 +22,11 @@ __pycache__/
 *data/
 *Results_Analysis/
 *FurtherAnalysis/
+*Image/
 
 Generated Data
 *.h5
-*.png
+
 
 *.zip
 *coordinates.txt
