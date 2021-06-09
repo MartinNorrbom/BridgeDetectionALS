@@ -15,11 +15,11 @@ sys.path.insert(1, '../Functions')
 
 import accessDataFiles
 import analysis_ALS
-import pptk
 import time
+import pptk
 
 
-def pointFilter(coordinates,pred_label_seg, minimumArea = 3, minimumPoints = 3, searchRadius = 2):
+def pointFilter(coordinates,pred_label_seg, minimumArea = 3, minimumPoints = 3, searchRadius = 2, pointDensity = 0):
 
     # Indicies classified as bridges.
     positiveIndex = pred_label_seg==1
@@ -29,12 +29,18 @@ def pointFilter(coordinates,pred_label_seg, minimumArea = 3, minimumPoints = 3, 
 
     if(sum(positiveIndex) > 0):
 
+        indCount = 0
+
         # Get numeric indecies.
         index = np.zeros(np.sum(positiveIndex)).astype(int)
-        for i in range(len(index)):
-            if(positiveIndex[i] == 1):
-                index[i] = i
-        
+
+        #index = np.where( pred_label_seg==1 ).astype(np.int64)
+        for i in range(len(pred_label_seg)):
+            if(pred_label_seg[i] == 1):
+
+                index[indCount] = i
+                indCount = np.copy(indCount)+1
+
         # Get XYZ coordinates for only bridge points.
         clusterCoord = np.copy( coordinates[positiveIndex,:] )
 
@@ -42,32 +48,49 @@ def pointFilter(coordinates,pred_label_seg, minimumArea = 3, minimumPoints = 3, 
         # Use DBSCAN to get clusters of bridge points.
         clustering = DBSCAN(eps=searchRadius, min_samples=1).fit(clusterCoord)
 
+        nrCluster = max(clustering.labels_)
+
+        centerSavedCluster = []
+
         # Loop through all the clusters.
         for i in range(max(clustering.labels_)+1):
 
+            currentClusterIndex = clustering.labels_ == i
+
             # Get the XY coordinates from the points in the current cluster.
-            pointsHull = np.copy(clustering.components_[clustering.labels_ == i, 0:2]).astype(dtype='float64')
+            pointsHull = np.copy(clustering.components_[currentClusterIndex, 0:2]).astype(dtype='float64')
 
             # Get unique XY coordinates
-            uniqueValuesX,uniqueIndexX = np.unique(pointsHull[:,0],axis=0,return_index=True)
-            uniqueValuesY,uniqueIndexY = np.unique(pointsHull[:,1],axis=0,return_index=True)
+            uniqueCoords,uindex = np.unique(pointsHull[:,0:2],axis=0,return_index=True)
 
             # At least 3 unique points is needed to get an area over the cluster.
-            if( len(uniqueIndexX) >= minimumPoints and len(uniqueIndexY) >= minimumPoints ):
+            if( uniqueCoords.shape[0] >= minimumPoints ):
 
                 # Use convex hull to find the area of XY coordinates over the cluster.
                 hull = ConvexHull( pointsHull,'volume','QJ')
 
-
+                # Remove clusters less than the required covered area.
                 if( hull.volume < minimumArea ):
-                    filtered_predication[ index[clustering.labels_ == i] ] = 0
+                    filtered_predication[ index[currentClusterIndex] ] = 0
+
+
+                # Remove clusters with to low density.
+                elif( (hull.volume/uniqueCoords.shape[0]) < pointDensity ):
+                    filtered_predication[ index[currentClusterIndex] ] = 0
+
+                else:
+
+                    centerSavedCluster.append( np.squeeze(np.round( np.average(uniqueCoords,axis=0) ).astype(np.int)) )
 
             else:
+                filtered_predication[ index[currentClusterIndex] ] = 0
 
-                filtered_predication[ index[clustering.labels_ == i] ] = 0
     
-    
-    return filtered_predication
+
+
+
+
+    return filtered_predication,centerSavedCluster
 
 
 def voting_overlapping(coordinates,pred_label_seg, geo_coord, label_seg = [] ):
@@ -128,8 +151,6 @@ def voting_overlapping(coordinates,pred_label_seg, geo_coord, label_seg = [] ):
                 # Set all point labels with bridge label majority to bridge.
                 tempIndex[ np.where( voteRes > 0.5 ) ] = 1
 
-                # FIX EQUAL VOTING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
                 predList.append(tempIndex)
             else:
                 # All points were unique so no voting is needed.
@@ -160,6 +181,7 @@ def voting_overlapping(coordinates,pred_label_seg, geo_coord, label_seg = [] ):
         # There coordinates is not divided into tile block, so all the data is added.
         allCoord = np.copy(coordinates)
         allPred = np.copy(pred_label_seg)
+        allLabel_seg = np.copy(label_seg)
 
 
     endVT = time.time()
@@ -221,9 +243,8 @@ def voting_overlapping(coordinates,pred_label_seg, geo_coord, label_seg = [] ):
         # If majority votes is bridges set prediction label to bridge.
         uPred[ np.where( voteRes > 0.5 ) ] = 1
 
-        # FIX EQUAL VOTING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        indexEqualVotes = np.squeeze( np.where( voteRes == 0.5 ) )
+        # Indicies for equal votes.
+        indexEqualVotes = np.squeeze( np.where( voteRes == 0.5 ), axis=0 )
 
         print("Number of equal votes: ")
         print(indexEqualVotes.shape)
@@ -253,16 +274,12 @@ def voting_overlapping(coordinates,pred_label_seg, geo_coord, label_seg = [] ):
 
     else:
         # If all points are unique.
-        uPred = np.copy(allPred[uAllIndex])
+        uPred = np.copy(allPred[index_to_use])
 
     endVO = time.time()
     print("Time voting overlap: ")
     print(endVO - startVO)
 
-
-
-    # v = pptk.viewer(uAllCoord,uPred)
-    # v.set(point_size=0.35) # define the point size
 
     if(len(label_seg) != 0):
         uLabel_seg = np.copy( allLabel_seg[index_to_use] )

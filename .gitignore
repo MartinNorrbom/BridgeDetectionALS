@@ -20,10 +20,13 @@ __pycache__/
 *TrainedModels/
 *TestResults/
 *data/
+*Results_Analysis/
+*FurtherAnalysis/
+*Image/
 
 Generated Data
 *.h5
-*.png
+
 
 *.zip
 *coordinates.txt

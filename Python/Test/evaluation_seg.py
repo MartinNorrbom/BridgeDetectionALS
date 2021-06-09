@@ -19,25 +19,23 @@ sys.path.insert(1, '../ML_Algorithms/pointNET2/utils')
 sys.path.insert(1, '../Functions')
 
 import accessDataFiles
-import analysis_ALS
+#import analysis_ALS
 
 
 
 # Specifies which point features that will be used during training.
 # Leave empty for just XYZ. Write "return_number" to add number of returns and "intensity" to add intensity.
-
-pointFeatures = ["intensity"] #["intensity","return_number"] #
-
-logPath = '../TrainedModels/step_2_B70_P8192_E400/' #step_1_xyz+intensity_4F/' #step_1_xyz+RN_4F/' #step_1_xyz_3F/'
+pointFeatures = ["intensity"]#["return_number", "intensity"]
 
 
-# Defines parameters for PointNet.
+# Specify the number of points and the batch size here:
+
+# Defines parameters for PointNet++.
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
-#parser.add_argument('--model', default='pointnet2_part_seg', help='Model name [default: pointnet2_part_seg]')
-parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 1]')
+parser.add_argument('--batch_size', type=int, default=8, help='Batch Size during training [default: 1]')
 parser.add_argument('--num_point', type=int, default=8192, help='Point Number [256/512/1024/2048] [default: 1024]')
-parser.add_argument('--model_path', default=logPath+'model.ckpt', help='model checkpoint file path [default: log/model.ckpt]')
+parser.add_argument('--model_path', default='../TrainedModels/log/model.ckpt', help='model checkpoint file path [default: log/model.ckpt]')
 parser.add_argument('--res_dir', default='Result', help='Result folder path [dump]')
 parser.add_argument('--visu', action='store_true', help='Whether to dump image for error case [default: False]')
 
@@ -69,15 +67,8 @@ if not os.path.exists(RES_DIR): os.mkdir(RES_DIR)
 NUM_CLASSES = 2
 
 
-# SHAPE_NAMES = [line.rstrip() for line in \
-#     open(os.path.join(BASE_DIR, '../data/Lantmateriet/shape_names.txt'))]
-
-# Import the data.
-# TRAIN_FILES = accessDataFiles.getDataFiles( \
-#     os.path.join(BASE_DIR, '../data/Lantmateriet/train_files.txt'))
-
 TEST_FILES = accessDataFiles.getDataFiles(\
-    os.path.join(BASE_DIR, '../data/Lantmateriet/test_files_mixed.txt'))
+    os.path.join(BASE_DIR, '../data/Lantmateriet/test_files.txt'))
 
 RES_FILES = []
 
@@ -123,8 +114,7 @@ def evaluate(num_votes):
     print("Evaluate one epoch.")
     eval_one_epoch(sess, ops, num_votes)
 
-    analysis_ALS.analys_ALS(RES_FILES,logPath)
-
+    #analysis_ALS.analys_ALS(RES_FILES)
     
 
 # Function to evaluate one epoch.

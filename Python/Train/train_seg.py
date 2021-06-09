@@ -26,18 +26,17 @@ import accessDataFiles
 
 # Specifies which point features that will be used during training.
 # Leave empty for just XYZ. Write "return_number" to add number of returns and "intensity" to add intensity.
-
-pointFeatures = ["intensity"] #["return_number", "intensity"] #
-
+pointFeatures = ["intensity"] #["return_number", "intensity"]
 
 
-# Defines parameters for PointNet++
+
+# Defines parameters for PointNet++.
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--log_dir', default='../TrainedModels/log', help='Log dir [default: log]')
-parser.add_argument('--num_point', type=int, default=1024, help='Point Number [default: 2048]')
-parser.add_argument('--max_epoch', type=int, default=100, help='Epoch to run [default: 201]')
-parser.add_argument('--batch_size', type=int, default=2, help='Batch Size during training [default: 32]')
+parser.add_argument('--num_point', type=int, default=8192, help='Point Number [default: 2048]')
+parser.add_argument('--max_epoch', type=int, default=500, help='Epoch to run [default: 201]')
+parser.add_argument('--batch_size', type=int, default=8, help='Batch Size during training [default: 32]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--momentum', type=float, default=0.9, help='Initial learning rate [default: 0.9]')
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
@@ -101,7 +100,6 @@ TRAIN_FILES = accessDataFiles.getDataFiles( \
 
 TEST_FILES = accessDataFiles.getDataFiles(\
     os.path.join(BASE_DIR, '../data/Lantmateriet/validation_files.txt'))
-
 
 RES_FILES = []
 
@@ -216,7 +214,13 @@ def train():
 
 def train_one_epoch(sess, ops, train_writer):
     """ ops: dict mapping from string to tf ops """
-    is_training = True
+    is_training = True   
+
+
+    # Shuffle train files.
+    # Randomize the order of reading the files in each epoch.
+    train_file_idxs = np.arange(0, len(TRAIN_FILES))
+    np.random.shuffle(train_file_idxs)
     
     log_string(str(datetime.now()))
 
@@ -224,10 +228,7 @@ def train_one_epoch(sess, ops, train_writer):
     total_seen = 0
     loss_sum = 0
 
-    # Shuffle train files.
-    # Randomize the order of reading the files in each epoch.
-    train_file_idxs = np.arange(0, len(TRAIN_FILES))
-    np.random.shuffle(train_file_idxs)
+
 
     # Loop through all the test files.
     for fn in range(len(TRAIN_FILES)):
@@ -246,21 +247,25 @@ def train_one_epoch(sess, ops, train_writer):
         num_batches = file_size // BATCH_SIZE
 
 
+	# Loop through all batches.
         for batch_idx in range(int(num_batches)):
 
+            # Get index of current batch.
             start_idx = batch_idx * BATCH_SIZE
             end_idx = (batch_idx+1) * BATCH_SIZE
 
+            # Set batch.
             feed_dict = {ops['pointclouds_pl']: current_data[start_idx:end_idx, :, :],
                             ops['labels_pl']: current_label_seg[start_idx:end_idx,:],
                             ops['is_training_pl']: is_training}
 
-
+            # Train one batch.
             summary, step, _, loss_val, pred_val = sess.run([ops['merged'], ops['step'],
                 ops['train_op'], ops['loss'], ops['pred']], feed_dict=feed_dict)
 
             train_writer.add_summary(summary, step)
 
+            # Get the number of correct predications in the current batch.
             pred_val = np.argmax(pred_val, 2)
             correct = np.sum(pred_val == current_label_seg[start_idx:end_idx,:])
             total_correct += correct
@@ -298,10 +303,7 @@ def eval_one_epoch(sess, ops, test_writer):
     for fn in range(len(TEST_FILES)):
 
         # Load the current evaluation file.
-        current_data, current_label, current_label_seg = accessDataFiles.load_h5_F5(validation_files[fn],pointFeatures)
-
-        print(str(validation_files[fn]))
-
+        current_data, current_label, current_label_seg = accessDataFiles.load_h5_F5(TEST_FILES[fn],pointFeatures)
         # Get points for the input layer.
         current_data = current_data[:,0:NUM_POINT,:]
         current_label_seg = np.squeeze(current_label_seg)

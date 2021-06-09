@@ -11,6 +11,21 @@ import training_functions
 def getDataFiles(list_filename):
     return [line.rstrip() for line in open(list_filename)]
 
+
+def save_results_h5(h5_filename,data_coord,seg_label,seg_prediction):
+    ''' Save results in h5 format. '''
+
+    # Create h5 file.
+    f = h5py.File(h5_filename,'w')
+
+    # Save the XYZ coordinates, labels and predictions.
+    f.create_dataset('data', data=data_coord)
+    f.create_dataset('label_seg', data=seg_label)
+    f.create_dataset('pred_label_seg', data=seg_prediction)
+
+    f.close()
+
+
 def load_h5(h5_filename):
     f = h5py.File(h5_filename,'r')
     data = f['data'][:]
@@ -92,13 +107,21 @@ def load_h5_analys_data(filename):
                 typesAvailable[i]=1
                 break
     
-    if sum(typesAvailable[0:3]) < 3:
-        print("The h5 file is not supported, at least one key of the types("+str(listOfTypes[0:4])+")")
-    else:
-        data = f[listOfTypes[0]][:]
-        label = f[listOfTypes[1]][:]
-        seg = f[listOfTypes[2]][:]
 
+    if typesAvailable[0]:
+        data = f[listOfTypes[0]][:]
+    else:
+        data = []
+
+    if typesAvailable[1]:
+        label = f[listOfTypes[1]][:]
+    else:
+        label = []
+
+    if typesAvailable[2]:
+        seg = f[listOfTypes[2]][:]
+    else:
+        seg = []
 
     if typesAvailable[3]:
         pred_label = f[listOfTypes[3]][:]
@@ -117,7 +140,7 @@ def load_h5_analys_data(filename):
 
     f.close()
 
-    return (data,label,seg,pred_label,pred_label_seg,geo_coord)
+    return data,label,seg,pred_label,pred_label_seg,geo_coord
 
 
 
