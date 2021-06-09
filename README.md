@@ -63,7 +63,14 @@ Python was used for the ML part. To run PointNet++, Linux is required, but the a
 
 ### Set up PointNet++
 
+To set up PointNet++, you must install the CUDA toolkit and Tensorflow. We used the following versions: Python 3.7, Cuda 10.0, and Tensorflow 1.14. After the packages are installed, the next step is to compile the shell scripts located in three folders (3d_interpolation, grouping, and sampling), which are located in the following path:
 
+Python->ML_Algorithms->pointNET2->tf_ops
+
+To compile the shell scripts, you need to change the paths of the CUDA and Tensorflow libraries in the shell scripts.
+For better instructures, visit the following website:
+
+https://www.programmersought.com/article/96705926428/
 
 ### Train up a model
 
@@ -77,7 +84,7 @@ Then open train_seg.py and specify the training parameters.
 3. Max epoch
 4. Batch size
 
-There are even more parameter in this script and in the model scripts ("pointnet2_part_seg_(3,4,or 5)Features.py") in the folder
+There are even more parameter in this script and in the model scripts (pointnet2_part_seg_(3,4,or 5)Features.py) in the folder
 "Python->ML_Algorithms->pointNET2->part_seg".
 That can be used for the training.
 
